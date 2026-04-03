@@ -445,8 +445,13 @@ app.post('/api/admin/stop-impersonation', requireAdmin, (req, res) => {
 function today() { return new Date().toISOString().split('T')[0]; }
 function firstDayOfYear() { return `${new Date().getFullYear()}-01-01`; }
 
-// ── Start Server ──────────────────────────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`CFO Dashboard Portal running on port ${PORT}`);
-  console.log(`QBO Environment: ${QBO_ENV}`);
+// ── Start Server (wait for DB tables to be ready) ────────────────────────────
+db.ready.then(() => {
+  app.listen(PORT, () => {
+    console.log(`CFO Dashboard Portal running on port ${PORT}`);
+    console.log(`QBO Environment: ${QBO_ENV}`);
+  });
+}).catch(err => {
+  console.error('Failed to initialize database:', err.message);
+  process.exit(1);
 });

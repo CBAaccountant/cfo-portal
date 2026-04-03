@@ -15,6 +15,66 @@ pool.on('error', (err) => {
 
 module.exports.pool = pool;
 
+// ── Auto-initialize tables on startup ─────────────────────────────────────────
+async function initDB() {
+  const client = await pool.connect();
+  try {
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id            SERIAL PRIMARY KEY,
+        email         VARCHAR(255) UNIQUE NOT NULL,
+        password_hash VARCHAR(255) NOT NULL,
+        role          VARCHAR(20) NOT NULL DEFAULT 'client' CHECK (role IN ('admin', 'client')),
+        company_name  VARCHAR(255),
+        is_active     BOOLEAN DEFAULT true,
+        last_login    TIMESTAMPTZ,
+        created_at    TIMESTAMPTZ DEFAULT NOW(),
+        updated_at    TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE TABLE IF NOT EXISTS qbo_connections (
+        id               SERIAL PRIMARY KEY,
+        user_id          INTEGER UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        realm_id         VARCHAR(50) NOT NULL,
+        access_token     TEXT NOT NULL,
+        refresh_token    TEXT NOT NULL,
+        token_expires_at TIMESTAMPTZ,
+        connected_at     TIMESTAMPTZ DEFAULT NOW(),
+        last_refreshed   TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE TABLE IF NOT EXISTS session (
+        sid    VARCHAR NOT NULL COLLATE "default",
+        sess   JSON NOT NULL,
+        expire TIMESTAMP(6) NOT NULL,
+        CONSTRAINT session_pkey PRIMARY KEY (sid) NOT DEFERRABLE INITIALLY IMMEDIATE
+      );
+      CREATE INDEX IF NOT EXISTS idx_session_expire ON session (expire);
+      CREATE INDEX IF NOT EXISTS idx_users_email ON users (email);
+      CREATE INDEX IF NOT EXISTS idx_qbo_user_id ON qbo_connections (user_id);
+    `);
+    console.log('Database tables initialized.');
+    // Seed admin account if env vars provided and admin doesn't exist
+    const adminEmail = process.env.ADMIN_EMAIL;
+    const adminPass  = process.env.ADMIN_PASSWORD;
+    if (adminEmail && adminPass) {
+      const existing = await client.query('SELECT id FROM users WHERE email = $1', [adminEmail]);
+      if (existing.rows.length === 0) {
+        const hash = await bcrypt.hash(adminPass, 10);
+        await client.query(
+          `INSERT INTO users (email, password_hash, role, company_name) VALUES ($1, $2, 'admin', 'Clear Books Advisory')`,
+          [adminEmail, hash]
+        );
+        console.log(`Admin account created: ${adminEmail}`);
+      }
+    }
+  } catch (err) {
+    console.error('DB init error:', err.message);
+  } finally {
+    client.release();
+  }
+}
+
+module.exports.ready = initDB();
+
 // ── Encryption (AES-256-GCM) ──────────────────────────────────────────────────
 const ALGO = 'aes-256-gcm';
 const KEY  = Buffer.from(process.env.TOKEN_ENCRYPTION_KEY || '', 'hex');
