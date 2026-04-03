@@ -11,6 +11,9 @@ const { requireAuth, requireAdmin, getTargetUserId } = require('./middleware');
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust Railway's proxy so secure cookies work over HTTPS
+app.set('trust proxy', 1);
+
 // ── Session (PostgreSQL-backed) ───────────────────────────────────────────────
 app.use(session({
   store: new pgSession({
