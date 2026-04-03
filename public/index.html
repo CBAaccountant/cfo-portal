@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CFO Dashboard Portal</title>
+<style>
+  body { margin: 0; background: #f0f1f5; display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: sans-serif; color: #4a5568; }
+</style>
+</head>
+<body>
+<script>
+  fetch('/api/auth/me')
+    .then(r => r.json())
+    .then(d => {
+      if (d.error) return window.location.href = '/login.html';
+      if (d.role === 'admin' && !d.impersonating) return window.location.href = '/admin.html';
+      return window.location.href = '/dashboard.html';
+    })
+    .catch(() => window.location.href = '/login.html');
+</script>
+</body>
+</html>

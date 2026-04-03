@@ -1,0 +1,1577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Clear Books Advisory | CFO Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --navy: #f0f1f5;
+  --navy-light: #ffffff;
+  --blue-dark: #5c4fd6;
+  --blue: #7c6ef5;
+  --blue-light: #a89cf7;
+  --green-light: #00b894;
+  --gold-light: #e67e22;
+  --teal: #0984e3;
+  --teal-light: #74b9ff;
+  --red-light: #e17055;
+  --text-primary: #1a1d2e;
+  --text-secondary: #4a5568;
+  --text-muted: #a0aec0;
+  --border: rgba(0,0,0,0.07);
+  --border-strong: rgba(0,0,0,0.13);
+  --card-bg: #ffffff;
+  --shadow: 0 1px 12px rgba(0,0,0,0.08);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Outfit',sans-serif;background:#f0f1f5;color:var(--text-primary);min-height:100vh;font-size:14px;}
+
+/* CONNECT SCREEN */
+#connectScreen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:32px;padding:40px}
+.drop-logo{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:600;letter-spacing:.04em;text-align:center}
+.drop-logo span{color:var(--blue-light)}
+.sub-badge{font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);text-align:center;margin-top:4px}
+.connect-box{width:min(520px,100%);border:2px dashed var(--border-strong);border-radius:16px;padding:56px 40px;text-align:center;background:var(--card-bg)}
+.connect-icon{font-size:3rem;margin-bottom:16px;display:block;opacity:.7}
+.connect-title{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:600;margin-bottom:8px}
+.connect-sub{color:var(--text-secondary);font-size:.85rem;line-height:1.6;margin-bottom:24px}
+.connect-btn{padding:12px 32px;background:var(--blue-dark);border:1px solid var(--blue);color:var(--text-primary);border-radius:8px;font-family:'Outfit',sans-serif;font-size:.88rem;font-weight:500;cursor:pointer;letter-spacing:.06em;transition:all .2s;text-transform:uppercase}
+.connect-btn:hover{background:var(--blue);box-shadow:0 0 24px rgba(46,117,182,.3)}
+
+/* DASHBOARD */
+#dashboard{display:none;flex-direction:column;min-height:100vh}
+header{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;border-bottom:1px solid var(--border);background:#ffffff;position:sticky;top:0;z-index:100;box-shadow:0 1px 8px rgba(0,0,0,0.06)}
+.hbrand{font-family:'Cormorant Garamond',serif;font-size:1.35rem;font-weight:700;letter-spacing:.06em;color:#1a1d2e}
+.hbrand span{color:var(--blue)}
+.hbadge{font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);margin-top:2px}
+.hcontrols{display:flex;align-items:center;gap:12px}
+.plabel{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted)}
+.hdate{background:#f7f8fa;border:1px solid var(--border-strong);color:var(--text-primary);font-family:'Outfit',sans-serif;font-size:.82rem;padding:7px 12px;border-radius:7px;cursor:pointer;outline:none}
+.hdate:focus{border-color:var(--blue)}
+.hbtn{padding:7px 14px;background:transparent;border:1px solid var(--border-strong);color:var(--text-secondary);border-radius:7px;font-family:'Outfit',sans-serif;font-size:.75rem;cursor:pointer;letter-spacing:.05em;transition:all .2s;text-transform:uppercase}
+.hbtn:hover{border-color:var(--blue);color:var(--blue)}
+.hbtn.load{background:var(--blue);border-color:var(--blue);color:#fff}
+.hbtn.load:hover{background:var(--blue-dark)}
+.status-connected{font-size:.72rem;color:#00b894;letter-spacing:.06em;display:flex;align-items:center;gap:6px}
+.sdot{width:7px;height:7px;border-radius:50%;background:#00b894;box-shadow:0 0 6px rgba(0,184,148,.5)}
+main{flex:1;padding:28px 32px;display:flex;flex-direction:column;gap:24px}
+.slabel{font-size:.68rem;letter-spacing:.15em;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px;font-weight:500}
+
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:14px}
+@media(max-width:1200px){.kpi-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:768px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+.kcard{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:18px 20px;position:relative;overflow:hidden;transition:all .25s}
+.kcard::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--ac,var(--blue))}
+.kcard:hover{border-color:var(--border-strong);box-shadow:var(--shadow);transform:translateY(-1px)}
+.klabel{font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);font-weight:500;margin-bottom:8px}
+.kval{font-family:'Cormorant Garamond',serif;font-size:1.7rem;font-weight:700;line-height:1.1;margin-bottom:8px}
+.kvar{display:flex;align-items:center;gap:6px;font-size:.75rem;font-weight:500}
+.kvar.pos{color:var(--green-light)}.kvar.neg{color:var(--red-light)}.kvar.neu{color:var(--text-muted)}
+.kprior{font-size:.7rem;color:var(--text-muted);margin-top:4px}
+
+/* CHARTS */
+.crows{display:grid;grid-template-columns:2fr 1fr;gap:16px}
+@media(max-width:1100px){.crows{grid-template-columns:1fr}}
+.ccard{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:20px 24px}
+.ctitle{font-family:'Cormorant Garamond',serif;font-size:1rem;font-weight:600;margin-bottom:4px}
+.csub{font-size:.7rem;color:var(--text-muted);margin-bottom:16px;letter-spacing:.05em}
+.cbox{position:relative;height:240px}
+
+/* RATIOS */
+.rrow{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+@media(max-width:900px){.rrow{grid-template-columns:1fr}}
+.rcard{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:16px 20px;display:flex;flex-direction:column;gap:4px;transition:all .25s;align-items:flex-start}
+.rcard:hover{border-color:var(--border-strong);box-shadow:var(--shadow)}
+.rlabel{font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted)}
+.rval{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:700;line-height:1}
+.rbar{height:3px;background:var(--navy-light);border-radius:2px;margin-top:4px;overflow:hidden;width:100%}
+.rbarfill{height:100%;border-radius:2px;transition:width .6s ease}
+.rperiod{font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:2px;opacity:.7}
+.rexplain{font-size:.72rem;color:var(--text-secondary);line-height:1.5;margin-top:6px;padding-top:8px;border-top:1px solid var(--border)}
+.rmeaning{font-size:.72rem;margin-top:4px;font-style:italic;line-height:1.4}
+.rmeaning.good{color:var(--green-light)}.rmeaning.warn{color:var(--gold-light)}.rmeaning.bad{color:var(--red-light)}.rmeaning.neutral{color:var(--text-muted)}
+
+/* TABLE */
+.tcard{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.thead-row{display:flex;align-items:center;justify-content:space-between;padding:18px 24px 14px;border-bottom:1px solid var(--border)}
+.ttitle{font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:600}
+.tbadge{font-size:.7rem;letter-spacing:.08em;color:var(--text-muted);text-transform:uppercase}
+.tscroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.78rem}
+thead th{padding:9px 16px;text-align:right;font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);font-weight:500;border-bottom:1px solid var(--border);white-space:nowrap}
+thead th:first-child{text-align:left}
+tbody tr{border-bottom:1px solid rgba(0,0,0,.04);transition:background .15s}
+tbody tr:hover{background:rgba(124,110,245,.03)}
+tbody td{padding:7px 16px;text-align:right;color:var(--text-secondary);white-space:nowrap}
+tbody td:first-child{text-align:left}
+tr.gh td{font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);font-weight:500;padding-top:14px;padding-bottom:4px;background:#f9fafb}
+tr.dr td{padding-left:28px}
+tr.st td{font-weight:600;color:var(--text-primary);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding-top:8px;padding-bottom:8px;background:#f7f8fa}
+tr.cr td{font-weight:700;font-family:'Cormorant Garamond',serif;font-size:.92rem;color:var(--blue-dark);border-top:2px solid var(--border-strong);padding-top:10px;padding-bottom:10px}
+tr.sp td{height:6px;border:none}
+.nv{color:var(--red-light)!important}
+.fv{color:var(--green-light)!important;font-size:.72rem}
+.uv{color:var(--red-light)!important;font-size:.72rem}
+
+/* TABS */
+.tab-nav{display:flex;gap:0;border-bottom:1px solid var(--border);padding:0 32px;background:#ffffff}
+.tab-btn{padding:12px 22px;font-family:'Outfit',sans-serif;font-size:.78rem;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);background:transparent;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all .2s;margin-bottom:-1px}
+.tab-btn:hover{color:var(--text-secondary)}
+.tab-btn.active{color:var(--blue);border-bottom-color:var(--blue)}
+.tab-panel{display:none}
+.tab-panel.active{display:flex;flex-direction:column;gap:24px}
+
+/* BS */
+.bs-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:900px){.bs-cols{grid-template-columns:1fr}}
+.liq-card{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:18px 22px;display:flex;flex-direction:column;gap:5px;transition:all .25s}
+.liq-card:hover{border-color:var(--border-strong);box-shadow:var(--shadow)}
+.liq-period{font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);opacity:.7}
+.liq-label{font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);font-weight:500}
+.liq-val{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:700;line-height:1.1}
+.liq-bar{height:3px;background:var(--navy-light);border-radius:2px;margin-top:4px;overflow:hidden;width:100%}
+.liq-barfill{height:100%;border-radius:2px;transition:width .6s ease}
+.liq-explain{font-size:.72rem;color:var(--text-secondary);line-height:1.5;margin-top:6px;padding-top:8px;border-top:1px solid var(--border)}
+.liq-meaning{font-size:.72rem;margin-top:4px;font-style:italic;line-height:1.4}
+.liq-meaning.good{color:var(--green-light)}.liq-meaning.warn{color:var(--gold-light)}.liq-meaning.bad{color:var(--red-light)}.liq-meaning.neutral{color:var(--text-muted)}
+.bs-kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:900px){.bs-kpi-grid{grid-template-columns:repeat(2,1fr)}}
+
+footer{text-align:center;padding:16px 32px;border-top:1px solid var(--border);font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);background:#ffffff}
+footer span{color:var(--text-secondary);font-weight:500}
+
+/* IMPERSONATION BANNER */
+#impersonationBanner{display:none;background:#f59e0b;color:#1a1d2e;padding:8px 32px;font-size:.75rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:200}
+#impersonationBanner.show{display:flex}
+.imp-back{padding:5px 14px;background:rgba(0,0,0,.15);border:none;border-radius:6px;font-family:'Outfit',sans-serif;font-size:.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;color:#1a1d2e;transition:background .2s}
+.imp-back:hover{background:rgba(0,0,0,.25)}
+
+#lo{position:fixed;inset:0;background:rgba(240,241,245,.88);display:none;align-items:center;justify-content:center;z-index:1000;flex-direction:column;gap:16px}
+.spin{width:36px;height:36px;border:2px solid var(--border-strong);border-top-color:var(--blue);border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.ltext{font-size:.8rem;color:var(--text-secondary);letter-spacing:.1em}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:3px}
+
+/* ── MANAGEMENT REPORT ───────────────────────────────────────────────────── */
+#tab-report { gap: 0; }
+.rpt-toolbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 0 20px; gap: 12px;
+}
+.rpt-print-btn {
+  padding: 8px 20px; background: var(--blue); border: none; border-radius: 8px;
+  color: #fff; font-family: 'Outfit', sans-serif; font-size: .8rem;
+  font-weight: 500; cursor: pointer; letter-spacing: .06em; text-transform: uppercase;
+  transition: all .2s;
+}
+.rpt-print-btn:hover { background: var(--blue-dark); }
+
+/* Report pages */
+.rpt-pages { display: flex; flex-direction: column; gap: 0; }
+.rpt-page {
+  background: #ffffff;
+  width: 816px; /* 8.5in at 96dpi */
+  min-height: 1056px; /* 11in */
+  margin: 0 auto 24px;
+  padding: 72px 80px;
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 20px rgba(0,0,0,.08);
+  position: relative;
+  font-size: 10pt;
+  font-family: 'Outfit', sans-serif;
+  color: #1a1d2e;
+  page-break-after: always;
+}
+
+/* Cover page */
+.rpt-cover {
+  display: flex; flex-direction: column;
+  justify-content: space-between; min-height: 912px;
+}
+.rpt-cover-top { display: flex; flex-direction: column; gap: 32px; }
+.rpt-cover-logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28pt; font-weight: 700; letter-spacing: .04em; color: #1a1d2e;
+  line-height: 1;
+}
+.rpt-cover-logo span { color: var(--blue); }
+.rpt-cover-rule { height: 3px; background: var(--blue); border-radius: 2px; width: 60px; margin: 4px 0; }
+.rpt-cover-tagline { font-size: 9pt; letter-spacing: .14em; text-transform: uppercase; color: var(--text-muted); }
+.rpt-cover-title { margin-top: 80px; }
+.rpt-cover-title h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 30pt; font-weight: 600; color: #1a1d2e; line-height: 1.15;
+  border-bottom: 2px solid var(--border); padding-bottom: 16px; margin-bottom: 16px;
+}
+.rpt-cover-title .rpt-subtitle { font-size: 12pt; color: var(--text-secondary); }
+.rpt-cover-meta { display: flex; flex-direction: column; gap: 6px; margin-top: 40px; }
+.rpt-cover-meta-row { display: flex; gap: 12px; font-size: 9pt; }
+.rpt-cover-meta-label { color: var(--text-muted); text-transform: uppercase; letter-spacing: .1em; min-width: 100px; }
+.rpt-cover-meta-val { color: var(--text-primary); font-weight: 500; }
+.rpt-cover-bottom {
+  border-top: 1px solid var(--border); padding-top: 20px;
+  display: flex; justify-content: space-between; align-items: flex-end;
+}
+.rpt-cover-conf { font-size: 7.5pt; color: var(--text-muted); letter-spacing: .08em; text-transform: uppercase; }
+.rpt-cover-page { font-size: 8pt; color: var(--text-muted); }
+
+/* Statement pages */
+.rpt-page-header {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 28px; padding-bottom: 14px; border-bottom: 2px solid var(--border);
+}
+.rpt-page-brand { font-family: 'Cormorant Garamond', serif; font-size: 11pt; font-weight: 700; color: #1a1d2e; }
+.rpt-page-brand span { color: var(--blue); }
+.rpt-page-brand small { display: block; font-size: 7pt; letter-spacing: .12em; text-transform: uppercase; color: var(--text-muted); font-family: 'Outfit', sans-serif; font-weight: 400; margin-top: 2px; }
+.rpt-stmt-title { text-align: right; }
+.rpt-stmt-title h2 { font-family: 'Cormorant Garamond', serif; font-size: 16pt; font-weight: 600; color: #1a1d2e; line-height: 1.1; }
+.rpt-stmt-title p { font-size: 8pt; color: var(--text-muted); margin-top: 4px; }
+
+/* Statement tables */
+.rpt-table { width: 100%; border-collapse: collapse; font-size: 9pt; margin-top: 8px; }
+.rpt-table th {
+  font-size: 7.5pt; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--text-muted); font-weight: 500; padding: 6px 8px;
+  border-bottom: 1px solid var(--border-strong); text-align: right;
+}
+.rpt-table th:first-child { text-align: left; }
+.rpt-table td { padding: 5px 8px; text-align: right; color: var(--text-secondary); }
+.rpt-table td:first-child { text-align: left; }
+.rpt-table tr.rh td { /* section header */
+  font-size: 7pt; letter-spacing: .13em; text-transform: uppercase;
+  color: var(--text-muted); font-weight: 600; padding-top: 14px; padding-bottom: 3px;
+  background: #f9fafb;
+}
+.rpt-table tr.rd td { padding-left: 20px; }
+.rpt-table tr.rs td { /* subtotal */
+  font-weight: 600; color: var(--text-primary);
+  border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+  background: #f7f8fa;
+}
+.rpt-table tr.rc td { /* grand total */
+  font-weight: 700; font-family: 'Cormorant Garamond', serif; font-size: 11pt;
+  color: var(--blue-dark); border-top: 2px solid var(--border-strong);
+  padding-top: 8px; padding-bottom: 8px;
+}
+.rpt-table tr.rsp td { height: 4px; border: none; }
+.rpt-nv { color: var(--red-light) !important; }
+
+/* Page footer */
+.rpt-page-footer {
+  position: absolute; bottom: 40px; left: 80px; right: 80px;
+  display: flex; justify-content: space-between; align-items: center;
+  border-top: 1px solid var(--border); padding-top: 10px;
+}
+.rpt-page-footer span { font-size: 7.5pt; color: var(--text-muted); letter-spacing: .06em; }
+
+/* Summary boxes */
+.rpt-summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+.rpt-sbox {
+  border: 1px solid var(--border); border-radius: 6px; padding: 12px 14px;
+  border-top: 3px solid var(--blue);
+}
+.rpt-sbox.green { border-top-color: var(--green-light); }
+.rpt-sbox.red { border-top-color: var(--red-light); }
+.rpt-sbox-label { font-size: 7pt; letter-spacing: .12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; }
+.rpt-sbox-val { font-family: 'Cormorant Garamond', serif; font-size: 16pt; font-weight: 700; color: #1a1d2e; line-height: 1.1; }
+.rpt-sbox-sub { font-size: 7pt; color: var(--text-muted); margin-top: 3px; }
+
+/* Aging landscape pages */
+.rpt-page-landscape {
+  background: #ffffff;
+  width: 1056px; /* 11in at 96dpi */
+  min-height: 816px; /* 8.5in */
+  margin: 0 auto 24px;
+  padding: 48px 60px;
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 20px rgba(0,0,0,.08);
+  position: relative;
+  font-size: 9pt;
+  font-family: 'Outfit', sans-serif;
+  color: #1a1d2e;
+  page-break-after: always;
+}
+.aging-table {
+  width: 100%; border-collapse: collapse; font-size: 8.5pt; margin-top: 12px;
+}
+.aging-table thead tr {
+  background: #1a1d2e;
+}
+.aging-table thead th {
+  color: #ffffff; font-size: 7.5pt; font-weight: 600;
+  letter-spacing: .08em; text-transform: uppercase;
+  padding: 8px 10px; text-align: right;
+}
+.aging-table thead th:first-child { text-align: left; }
+.aging-table tbody tr:nth-child(even) { background: #f7f8fc; }
+.aging-table tbody tr:hover { background: #eeedfb; }
+.aging-table td { padding: 6px 10px; text-align: right; color: var(--text-secondary); border-bottom: 1px solid #f0f1f5; }
+.aging-table td:first-child { text-align: left; color: var(--text-primary); font-weight: 500; }
+.aging-table tr.aging-total td {
+  font-weight: 700; color: var(--text-primary);
+  background: #eeedfb; border-top: 2px solid var(--blue);
+  font-size: 9pt;
+}
+.aging-table tr.aging-overdue td { color: var(--red-light); }
+.aging-nv { color: var(--red-light) !important; }
+
+/* @print */
+@media print {
+  body { background: #fff !important; }
+  #connectScreen, header, .tab-nav, footer, #lo { display: none !important; }
+  main { padding: 0 !important; }
+  #tab-pl, #tab-bs { display: none !important; }
+  #tab-report { display: flex !important; }
+  .rpt-toolbar { display: none !important; }
+  .rpt-page, .rpt-page-landscape {
+    width: 100%; margin: 0; border: none; box-shadow: none;
+    padding: 40px 48px; min-height: auto; page-break-after: always;
+  }
+  .rpt-page-landscape {
+    width: 100%;
+  }
+}
+
+</style>
+</head>
+<body>
+
+<!-- CONNECT SCREEN -->
+<div id="connectScreen">
+  <div>
+    <div class="drop-logo">Clear Books <span>Advisory</span></div>
+    <div class="sub-badge">CFO Financial Dashboard</div>
+  </div>
+  <div class="connect-box">
+    <span class="connect-icon">📊</span>
+    <div class="connect-title">Connect to QuickBooks Online</div>
+    <div class="connect-sub">Sign in with your QuickBooks account to load your live financial data into the dashboard.</div>
+    <button class="connect-btn" onclick="window.location.href='/auth'">Connect QuickBooks</button>
+  </div>
+</div>
+
+<!-- LOADING OVERLAY -->
+<div id="lo">
+  <div class="spin"></div>
+  <div class="ltext">Loading financial data…</div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard">
+
+  <!-- Admin impersonation banner -->
+  <div id="impersonationBanner">
+    <span id="impersonationLabel">👁 Admin View — Viewing as: <strong id="impersonationName"></strong></span>
+    <button class="imp-back" onclick="stopImpersonation()">← Back to Admin Panel</button>
+  </div>
+
+  <header>
+    <div>
+      <div class="hbrand" id="headerBrand">Clear Books Advisory</div>
+      <div class="hbadge">Prepared by Clear Books Advisory</div>
+    </div>
+    <div class="hcontrols">
+      <div class="status-connected"><span class="sdot"></span><span id="realmLabel">Connected</span></div>
+      <span class="plabel">Start</span>
+      <input type="date" class="hdate" id="pnlStart"/>
+      <span class="plabel">End</span>
+      <input type="date" class="hdate" id="pnlEnd"/>
+      <button class="hbtn load" onclick="loadAll()">↻ Load</button>
+      <button class="hbtn" onclick="disconnectQbo()" id="disconnectBtn" title="Disconnect QuickBooks">⊗ QBO</button>
+      <button class="hbtn" onclick="logout()">↩ Logout</button>
+    </div>
+  </header>
+
+  <nav class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('pl',this)">📈 P&amp;L Analysis</button>
+    <button class="tab-btn" onclick="switchTab('bs',this)">🏦 Balance Sheet</button>
+    <button class="tab-btn" onclick="switchTab('report',this);reportLoaded=false;loadReport()">📄 Management Report</button>
+    <button class="tab-btn" onclick="switchTab('vendors',this);loadVendors()">🏢 Vendor Analysis</button>
+  </nav>
+
+  <main>
+    <!-- P&L TAB -->
+    <div class="tab-panel active" id="tab-pl">
+      <div>
+        <div class="slabel">Key Performance Indicators</div>
+        <div class="kpi-grid" id="kpiGrid"></div>
+      </div>
+      <div class="crows">
+        <div class="ccard">
+          <div class="ctitle">Revenue, Expenses &amp; Net Income</div>
+          <div class="csub">Monthly — Full Period</div>
+          <div class="cbox"><canvas id="comboChart"></canvas></div>
+        </div>
+        <div class="ccard">
+          <div class="ctitle">Net Margin % Trend</div>
+          <div class="csub">Monthly — Net Income ÷ Revenue</div>
+          <div class="cbox"><canvas id="marginChart"></canvas></div>
+        </div>
+      </div>
+      <div>
+        <div class="slabel">Key Financial Ratios</div>
+        <div class="rrow" id="ratioRow"></div>
+      </div>
+      <div class="tcard">
+        <div class="thead-row">
+          <div class="ttitle">Income Statement Summary</div>
+          <div class="tbadge" id="tperiod"></div>
+        </div>
+        <div class="tscroll">
+          <table>
+            <thead>
+              <tr id="isHeaderRow">
+                <th style="width:230px;min-width:200px;text-align:left">Account / Line</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody id="isBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- BALANCE SHEET TAB -->
+    <div class="tab-panel" id="tab-bs">
+      <div>
+        <div class="slabel">Balance Sheet Snapshot</div>
+        <div class="bs-kpi-grid" id="bsKpiGrid"></div>
+      </div>
+      <div class="bs-cols">
+        <div class="ccard">
+          <div class="ctitle">Total Assets vs Liabilities</div>
+          <div class="csub">As of selected date</div>
+          <div class="cbox"><canvas id="bsBarChart"></canvas></div>
+        </div>
+        <div class="ccard">
+          <div class="ctitle">Equity Composition</div>
+          <div class="csub">Assets, Liabilities &amp; Equity breakdown</div>
+          <div class="cbox"><canvas id="bsDoughnut"></canvas></div>
+        </div>
+      </div>
+      <div>
+        <div class="slabel">Liquidity &amp; Leverage Ratios</div>
+        <div class="rrow" id="bsRatioRow"></div>
+      </div>
+      <div class="tcard">
+        <div class="thead-row">
+          <div class="ttitle">Balance Sheet Summary</div>
+          <div class="tbadge" id="bsPeriodBadge"></div>
+        </div>
+        <div class="tscroll">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:230px;min-width:200px;text-align:left">Account / Line</th>
+                <th>Balance</th>
+              </tr>
+            </thead>
+            <tbody id="bsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- MANAGEMENT REPORT TAB -->
+    <div class="tab-panel" id="tab-report">
+      <div class="rpt-toolbar">
+        <div class="slabel" style="margin-bottom:0">Management Report — Financial Statements</div>
+        <button class="rpt-print-btn" onclick="window.print()">🖨️ Print / Save PDF</button>
+      </div>
+      <div class="rpt-pages" id="rptPages">
+        <div style="text-align:center;padding:60px 0;color:var(--text-muted);font-size:.85rem">
+          Click the tab to generate report from loaded data…
+        </div>
+      </div>
+    </div>
+
+    <!-- VENDOR ANALYSIS TAB -->
+    <div class="tab-panel" id="tab-vendors">
+      <div class="slabel">Vendor Spend Analysis</div>
+      <div class="kpi-grid" id="vendorKpis">
+        <div class="kcard" style="--ac:var(--blue)"><div class="klabel">Total Vendor Spend</div><div class="kval" id="vTotalSpend">—</div></div>
+        <div class="kcard" style="--ac:var(--red-light)"><div class="klabel">Top Vendor</div><div class="kval" id="vTopVendor" style="font-size:1.1rem">—</div></div>
+        <div class="kcard" style="--ac:var(--green-light)"><div class="klabel">Total Vendors</div><div class="kval" id="vVendorCount">—</div></div>
+        <div class="kcard" style="--ac:var(--gold-light)"><div class="klabel">Top 10 Concentration</div><div class="kval" id="vTop10Pct">—</div></div>
+        <div class="kcard" style="--ac:var(--teal)"><div class="klabel">Avg Spend / Vendor</div><div class="kval" id="vAvgSpend">—</div></div>
+        <div class="kcard" style="--ac:var(--blue-light)"><div class="klabel">Largest Single Bill</div><div class="kval" id="vLargestBill">—</div></div>
+      </div>
+      <div class="crows">
+        <div class="ccard">
+          <div class="ctitle">Top 10 Vendors by Spend</div>
+          <div class="csub">TOTAL PURCHASES · YEAR TO DATE</div>
+          <div class="cbox" style="height:320px"><canvas id="chartVendorBar"></canvas></div>
+        </div>
+        <div class="ccard">
+          <div class="ctitle">Vendor Spend Distribution</div>
+          <div class="csub">TOP 10 vs REST</div>
+          <div class="cbox" style="height:320px"><canvas id="chartVendorDoughnut"></canvas></div>
+        </div>
+      </div>
+      <div class="ccard" style="margin-top:0">
+        <div class="ctitle">All Vendors — Spend Breakdown</div>
+        <div class="csub">RANKED BY TOTAL SPEND</div>
+        <table style="width:100%;border-collapse:collapse;font-size:.8rem;margin-top:12px" id="vendorTable">
+          <thead>
+            <tr style="border-bottom:2px solid var(--border)">
+              <th style="text-align:left;padding:8px 12px;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted)">#</th>
+              <th style="text-align:left;padding:8px 12px;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted)">Vendor</th>
+              <th style="text-align:right;padding:8px 12px;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted)">Total Spend</th>
+              <th style="text-align:right;padding:8px 12px;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted)">% of Total</th>
+              <th style="text-align:right;padding:8px 12px;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted)">Share Bar</th>
+            </tr>
+          </thead>
+          <tbody id="vendorTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <footer>
+    <span id="footerBrand">Clear Books Advisory</span> &nbsp;·&nbsp; Prepared by Clear Books Advisory &nbsp;·&nbsp; Confidential | Management Use Only &nbsp;·&nbsp; Generated <span id="genDate"></span>
+  </footer>
+</div>
+
+<script>
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const MSHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+let chartCombo=null, chartMargin=null, chartBsBar=null, chartBsDoughnut=null;
+let _cachedPL=null, _cachedBS=null, _cachedStart=null, _cachedEnd=null;
+
+function today(){ return new Date().toISOString().split('T')[0]; }
+function firstOfYear(){ return new Date().getFullYear()+'-01-01'; }
+
+document.getElementById('pnlStart').value = firstOfYear();
+document.getElementById('pnlEnd').value   = today();
+document.getElementById('genDate').textContent = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+
+function switchTab(id, el){
+  document.querySelectorAll('.tab-panel').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  el.classList.add('active');
+}
+
+function fmt(n,compact=false){
+  if(n==null||isNaN(n))return'—';
+  const a=Math.abs(n);
+  if(compact&&a>=1e6)return(n<0?'-':'')+'$'+(a/1e6).toFixed(1)+'M';
+  if(compact&&a>=1e3)return(n<0?'-':'')+'$'+(a/1e3).toFixed(0)+'K';
+  return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(n);
+}
+function fp(n){ return isFinite(n)?(n>=0?'+':'')+n.toFixed(1)+'%':'—'; }
+
+function rowVal(row){
+  if(!row||!row.ColData)return 0;
+  return parseFloat(row.ColData[row.ColData.length-1]?.value||0)||0;
+}
+function rowVals(row){
+  if(!row||!row.ColData)return[];
+  return row.ColData.slice(1,-1).map(c=>parseFloat(c?.value||0)||0);
+}
+
+// ── CLIENT COMPANY NAME ──
+let clientCompanyName = '';
+
+async function fetchCompanyName(){
+  try {
+    const r = await fetch('/api/company-info');
+    if(r.ok){
+      const d = await r.json();
+      clientCompanyName = d.companyName || '';
+      applyCompanyName();
+    }
+  } catch(e){ console.warn('Could not fetch company name:', e); }
+}
+
+function applyCompanyName(){
+  if(!clientCompanyName) return;
+  const hb = document.getElementById('headerBrand');
+  if(hb) hb.textContent = clientCompanyName;
+  document.title = `${clientCompanyName} | CFO Dashboard`;
+  const ft = document.getElementById('footerBrand');
+  if(ft) ft.textContent = clientCompanyName;
+}
+
+// ── AUTH CHECK ──
+async function checkStatus(){
+  try {
+    const r = await fetch('/api/auth/me');
+    if(!r.ok){ window.location.href = '/login.html'; return; }
+    const me = await r.json();
+
+    // Show impersonation banner if admin is viewing a client
+    if(me.impersonating && me.viewingAs){
+      const banner = document.getElementById('impersonationBanner');
+      const nameEl = document.getElementById('impersonationName');
+      if(banner){ banner.classList.add('show'); }
+      if(nameEl){ nameEl.textContent = me.viewingAs.companyName || me.viewingAs.email; }
+    }
+
+    // Company name: use viewingAs name if impersonating, else own
+    const targetInfo = me.impersonating ? me.viewingAs : me;
+    if(targetInfo.companyName){
+      clientCompanyName = targetInfo.companyName;
+      applyCompanyName();
+    }
+
+    const qboConnected = me.impersonating ? me.viewingAs.qboConnected : me.qboConnected;
+
+    if(qboConnected){
+      document.getElementById('connectScreen').style.display='none';
+      document.getElementById('dashboard').style.display='flex';
+      document.getElementById('realmLabel').textContent = `Connected · ${targetInfo.companyName || me.email}`;
+      fetchCompanyName(); // also pull live QBO company name
+      loadAll();
+    } else {
+      // Show connect screen
+      document.getElementById('connectScreen').style.display='flex';
+      document.getElementById('dashboard').style.display='none';
+    }
+  } catch(e){
+    window.location.href = '/login.html';
+  }
+}
+
+async function logout(){
+  await fetch('/api/auth/logout', { method: 'POST' });
+  window.location.href = '/login.html';
+}
+
+async function disconnectQbo(){
+  if(!confirm('Disconnect QuickBooks? You will need to reconnect to see data.')) return;
+  await fetch('/api/disconnect', { method: 'POST' });
+  window.location.reload();
+}
+
+async function stopImpersonation(){
+  const r = await fetch('/api/admin/stop-impersonation', { method: 'POST' });
+  const d = await r.json();
+  window.location.href = d.redirect || '/admin.html';
+}
+
+async function loadAll(){
+  const start = document.getElementById('pnlStart').value;
+  const end   = document.getElementById('pnlEnd').value;
+  document.getElementById('lo').style.display='flex';
+  try {
+    await Promise.all([loadPnL(start,end), loadBS(end)]);
+  } finally {
+    document.getElementById('lo').style.display='none';
+  }
+}
+
+// ── P&L ──
+async function loadPnL(start,end){
+  const r = await fetch(`/api/pnl?start_date=${start}&end_date=${end}`);
+  if(!r.ok) return;
+  const data = await r.json();
+  _cachedPL = data; _cachedStart = start; _cachedEnd = end;
+  renderPnL(data, start, end);
+}
+
+function renderPnL(data, start, end){
+  const cols   = data.Columns?.Column||[];
+  const months = cols.slice(1,-1).map(c=>c.ColTitle||'');
+  const rows   = data.Rows?.Row||[];
+
+  const incSec = rows.find(r=>r.type==='Section'&&r.Header?.ColData?.[0]?.value?.toLowerCase().includes('income'));
+  const expSec = rows.find(r=>r.type==='Section'&&r.Header?.ColData?.[0]?.value?.toLowerCase().includes('expense'));
+  const netRow = rows.find(r=>r.type==='Section'&&r.Summary?.ColData?.[0]?.value?.toLowerCase().includes('net income'));
+
+  const totalRev  = rowVal(incSec?.Summary);
+  const totalExp  = rowVal(expSec?.Summary);
+  const netInc    = rowVal(netRow?.Summary);
+  const netMargin = totalRev?(netInc/totalRev)*100:0;
+  const expRatio  = totalRev?(totalExp/totalRev)*100:0;
+
+  const revM = rowVals(incSec?.Summary);
+  const expM = rowVals(expSec?.Summary);
+  const netM = rowVals(netRow?.Summary);
+  const marM = revM.map((r,i)=>r?(netM[i]/r*100):0);
+
+  const startD = new Date(start+'T00:00:00');
+  const endD   = new Date(end+'T00:00:00');
+  const rangeLabel = `${MONTHS[startD.getMonth()]} ${startD.getFullYear()} – ${MONTHS[endD.getMonth()]} ${endD.getFullYear()}`;
+  const endLabel   = `${MONTHS[endD.getMonth()]} ${endD.getFullYear()}`;
+
+  // KPIs
+  const kpis = [
+    {label:'Revenue',       val:totalRev, ac:'var(--blue)',       sub:rangeLabel},
+    {label:'Expenses',      val:totalExp, ac:'var(--red-light)',   sub:rangeLabel, neg:true},
+    {label:'Net Income',    val:netInc,   ac:'var(--teal-light)',  sub:rangeLabel, colored:true},
+    {label:'Net Margin',    val:null, display:netMargin.toFixed(1)+'%', ac:'var(--green-light)', sub:'Net Income ÷ Revenue', colored2:netMargin},
+    {label:'Expense Ratio', val:null, display:expRatio.toFixed(1)+'%', ac:'var(--gold-light)',  sub:'Expenses ÷ Revenue'},
+    {label:'Revenue Coverage', val:null, display:totalExp?(totalRev/totalExp).toFixed(2)+'x':'—', ac:'var(--blue-light)', sub:'Revenue ÷ Expenses', colored2:totalRev-totalExp},
+  ];
+
+  document.getElementById('kpiGrid').innerHTML = kpis.map(k=>{
+    let valHtml;
+    if(k.display!==undefined){
+      const c = k.colored2!==undefined?(k.colored2>=0?'var(--green-light)':'var(--red-light)'):'';
+      valHtml = `<div class="kval"${c?` style="color:${c}"`:''}>${k.display}</div>`;
+    } else {
+      const c = k.colored?(k.val>=0?'var(--green-light)':'var(--red-light)'):'';
+      valHtml = `<div class="kval"${c?` style="color:${c}"`:''}>${fmt(k.val,true)}</div>`;
+    }
+    return `<div class="kcard" style="--ac:${k.ac}">
+      <div class="klabel">${k.label}</div>
+      ${valHtml}
+      <div class="kprior">${k.sub}</div>
+    </div>`;
+  }).join('');
+
+  // Charts
+  if(chartCombo)chartCombo.destroy();
+  if(chartMargin)chartMargin.destroy();
+
+  const COPTS = {
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:'#4a5568',font:{family:'Outfit',size:11},boxWidth:12,padding:16}},
+      tooltip:{backgroundColor:'#1a1d2e',borderColor:'rgba(0,0,0,.1)',borderWidth:1,titleColor:'#ffffff',bodyColor:'#a0aec0',padding:12,callbacks:{label:c=>' '+fmt(c.raw,true)}}},
+    scales:{
+      x:{ticks:{color:'#a0aec0',font:{family:'Outfit',size:11}},grid:{color:'rgba(0,0,0,.04)'},border:{color:'rgba(0,0,0,.07)'}},
+      y:{ticks:{color:'#a0aec0',font:{family:'Outfit',size:11},callback:v=>fmt(v,true)},grid:{color:'rgba(0,0,0,.04)'},border:{color:'rgba(0,0,0,.07)'}}
+    }
+  };
+
+  chartCombo = new Chart(document.getElementById('comboChart'),{
+    data:{labels:months,datasets:[
+      {type:'bar', label:'Revenue',    data:revM,backgroundColor:'rgba(124,110,245,.75)',borderRadius:4,order:2},
+      {type:'bar', label:'Expenses',   data:expM,backgroundColor:'rgba(225,112,85,.65)',borderRadius:4,order:2},
+      {type:'line',label:'Net Income', data:netM,borderColor:'#00b894',backgroundColor:'rgba(0,184,148,.07)',borderWidth:2,pointRadius:4,pointBackgroundColor:'#00b894',tension:.35,fill:true,order:1}
+    ]},
+    options:{...COPTS,interaction:{mode:'index'}}
+  });
+
+  const ctx2=document.getElementById('marginChart').getContext('2d');
+  const g2=ctx2.createLinearGradient(0,0,0,240);
+  g2.addColorStop(0,'rgba(124,110,245,.2)');g2.addColorStop(1,'rgba(124,110,245,.01)');
+  chartMargin=new Chart(ctx2,{
+    type:'line',
+    data:{labels:months,datasets:[{label:'Net Margin %',data:marM,borderColor:'#7c6ef5',backgroundColor:g2,borderWidth:2,pointRadius:4,pointBackgroundColor:'#7c6ef5',tension:.4,fill:true}]},
+    options:{...COPTS,plugins:{...COPTS.plugins,tooltip:{...COPTS.plugins.tooltip,callbacks:{label:c=>' '+c.raw.toFixed(1)+'%'}}},
+      scales:{...COPTS.scales,y:{...COPTS.scales.y,ticks:{color:'#a0aec0',font:{family:'Outfit',size:11},callback:v=>v.toFixed(1)+'%'}}}}
+  });
+
+  // Ratios
+  const ratios=[
+    {
+      label:'Net Margin', val:netMargin, col:'var(--teal-light)',
+      fill:Math.min(Math.max(netMargin,0),100),
+      period:endLabel,
+      explain:`For every $1 of revenue, you keep ${netMargin.toFixed(1)}¢ as profit. Revenue was ${fmt(totalRev,true)}, total expenses were ${fmt(totalExp,true)}.`,
+      meaning:netMargin>=20?{cls:'good',txt:'Excellent — strong bottom-line profitability after all expenses.'}
+             :netMargin>=10?{cls:'good',txt:'Healthy — good profit after paying all costs and overhead.'}
+             :netMargin>=0 ?{cls:'warn',txt:'Slim — revenue covers costs, but not much is left over.'}
+             :               {cls:'bad', txt:'Negative — the business is spending more than it\'s earning.'},
+      display:netMargin.toFixed(1)+'%'
+    },
+    {
+      label:'Net Income', col:'var(--green-light)',
+      fill:totalRev?Math.min(Math.max(netInc/totalRev*100,0),100):0,
+      period:rangeLabel,
+      explain:`Absolute bottom line: ${fmt(totalRev,true)} revenue minus ${fmt(totalExp,true)} in expenses = ${fmt(netInc,true)} net income for the period.`,
+      meaning:netInc>0?{cls:'good',txt:'Profitable — the business generated a net gain this period.'}
+             :netInc===0?{cls:'warn',txt:'Break-even — revenue exactly covered expenses.'}
+             :            {cls:'bad', txt:'Loss — expenses exceeded revenue. Attention required.'},
+      display:fmt(netInc,true)
+    },
+    {
+      label:'Expense Ratio', val:expRatio, col:'var(--gold-light)',
+      fill:Math.min(Math.max(expRatio,0),100),
+      period:rangeLabel,
+      explain:`Expenses consumed ${expRatio.toFixed(1)}% of your ${fmt(totalRev,true)} in revenue. Lower is better — more of every dollar is kept as profit.`,
+      meaning:expRatio<=60?{cls:'good',txt:'Efficient — overhead is well-controlled relative to revenue.'}
+             :expRatio<=80?{cls:'warn',txt:'Moderate — expenses are consuming a notable share of revenue.'}
+             :               {cls:'bad', txt:'High — operating expenses are outpacing revenue growth.'},
+      display:expRatio.toFixed(1)+'%'
+    },
+    {
+      label:'Revenue Coverage', col:'var(--blue-light)',
+      fill:Math.min(totalExp?(totalRev/totalExp*100):0,100),
+      period:rangeLabel,
+      explain:`Revenue covers expenses ${totalExp?(totalRev/totalExp).toFixed(2)+'x':'—'}. A ratio above 1x means the business is generating profit after all costs.`,
+      meaning:totalRev>=totalExp?{cls:'good',txt:'Positive — revenue exceeds total expenses for the period.'}
+             :                   {cls:'bad', txt:'Negative — expenses exceed revenue. Review cost structure.'},
+      display:totalExp?(totalRev/totalExp).toFixed(2)+'x':'—'
+    },
+  ];
+
+  document.getElementById('ratioRow').innerHTML = ratios.map(r=>`
+    <div class="rcard">
+      <div class="rperiod">■ ${r.period}</div>
+      <div class="rlabel">${r.label}</div>
+      <div class="rval" style="color:${r.col}">${r.display}</div>
+      <div class="rbar"><div class="rbarfill" style="width:${r.fill}%;background:${r.col}"></div></div>
+      <div class="rexplain">${r.explain}</div>
+      <div class="rmeaning ${r.meaning.cls}">💬 ${r.meaning.txt}</div>
+    </div>`).join('');
+
+  // Table
+  document.getElementById('tperiod').textContent = rangeLabel;
+  const headerRow = document.getElementById('isHeaderRow');
+  const totalTh = headerRow.lastElementChild;
+  // Remove old month headers (everything between first and last th)
+  while (headerRow.children.length > 2) headerRow.removeChild(headerRow.children[1]);
+  // Insert month headers before the Total column
+  months.forEach(m => {
+    const th = document.createElement('th');
+    th.textContent = m;
+    headerRow.insertBefore(th, totalTh);
+  });
+
+  let isRows='';
+  function renderSection(section,depth){
+    if(!section)return;
+    const sRows=section.Rows?.Row||[];
+    if(section.Header){
+      const label=section.Header.ColData?.[0]?.value||'';
+      isRows+=`<tr class="gh"><td colspan="${months.length+2}">${label}</td></tr>`;
+    }
+    for(const r of sRows){
+      if(r.type==='Data'){
+        const vals=r.ColData||[];
+        const name=vals[0]?.value||'';
+        const mtdVals=vals.slice(1,-1);
+        const total=vals[vals.length-1];
+        const totalN=parseFloat(total?.value||0)||0;
+        isRows+=`<tr class="dr"><td>${name}</td>`;
+        mtdVals.forEach(v=>{const n=parseFloat(v?.value||0);isRows+=`<td class="${n<0?'nv':''}">${fmt(n)}</td>`;});
+        isRows+=`<td class="${totalN<0?'nv':''}">${fmt(totalN)}</td></tr>`;
+      } else if(r.type==='Section') renderSection(r,depth+1);
+    }
+    if(section.Summary){
+      const vals=section.Summary.ColData||[];
+      const name=vals[0]?.value||'Total';
+      const mtdVals=vals.slice(1,-1);
+      const total=vals[vals.length-1];
+      const totalN=parseFloat(total?.value||0)||0;
+      const isNet=name.toLowerCase().includes('net income');
+      isRows+=`<tr class="${isNet?'cr':'st'}"><td>${name}</td>`;
+      mtdVals.forEach(v=>{const n=parseFloat(v?.value||0);isRows+=`<td class="${n<0?'nv':''}">${fmt(n)}</td>`;});
+      isRows+=`<td class="${totalN<0?'nv':''}">${fmt(totalN)}</td></tr>`;
+    }
+  }
+  rows.forEach(r=>renderSection(r,0));
+  document.getElementById('isBody').innerHTML=isRows;
+}
+
+// ── BALANCE SHEET ──
+async function loadBS(asOf){
+  const r = await fetch(`/api/balance-sheet?as_of_date=${asOf}`);
+  if(!r.ok)return;
+  const data = await r.json();
+  _cachedBS = data;
+  renderBS(data, asOf);
+}
+
+function renderBS(data, asOf){
+  const rows=data.Rows?.Row||[];
+  const asOfD=new Date(asOf+'T00:00:00');
+  const dLabel=`${MONTHS[asOfD.getMonth()]} ${asOfD.getFullYear()}`;
+
+  function findTotal(label,rws){
+    rws=rws||rows;
+    for(const r of rws){
+      if(r.type==='Section'){
+        const s=r.Summary?.ColData?.[0]?.value?.toLowerCase();
+        if(s?.includes(label.toLowerCase()))return rowVal(r.Summary);
+        const sub=findTotal(label,r.Rows?.Row||[]);
+        if(sub!==null)return sub;
+      }
+    }
+    return null;
+  }
+
+  const totalAssets = findTotal('total assets')||0;
+  const totalLiab   = findTotal('total liabilities')||0;
+  const totalEquity = findTotal('total equity')||(totalAssets-totalLiab);
+  const curAssets   = findTotal('total current assets')||0;
+  const curLiab     = findTotal('total current liabilities')||0;
+  const curRatio    = curLiab?curAssets/curLiab:null;
+  const dte         = totalEquity?totalLiab/totalEquity:null;
+  const workCap     = curAssets-curLiab;
+
+  // KPIs
+  const bsKpis=[
+    {label:'Total Assets',      val:totalAssets, ac:'var(--blue)'},
+    {label:'Total Liabilities', val:totalLiab,   ac:'var(--red-light)',  neg:true},
+    {label:'Net Equity',        val:totalEquity, ac:'var(--green-light)',colored:true},
+    {label:'Working Capital',   val:workCap,     ac:'var(--teal-light)', colored:true},
+    {label:'Current Assets',    val:curAssets,   ac:'var(--blue-light)'},
+    {label:'Current Liabilities',val:curLiab,    ac:'var(--gold-light)', neg:true},
+  ];
+  document.getElementById('bsKpiGrid').innerHTML=bsKpis.map(k=>{
+    const c=k.colored?(k.val>=0?'var(--green-light)':'var(--red-light)'):'';
+    return`<div class="kcard" style="--ac:${k.ac}">
+      <div class="klabel">${k.label}</div>
+      <div class="kval"${c?` style="color:${c}"`:''}>${fmt(k.val,true)}</div>
+      <div class="kprior">${dLabel}</div>
+    </div>`;
+  }).join('');
+
+  // Charts
+  if(chartBsBar)chartBsBar.destroy();
+  if(chartBsDoughnut)chartBsDoughnut.destroy();
+
+  const BOPTS={responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:'#4a5568',font:{family:'Outfit',size:11},boxWidth:12}},
+      tooltip:{backgroundColor:'#1a1d2e',borderColor:'rgba(0,0,0,.1)',borderWidth:1,titleColor:'#ffffff',bodyColor:'#a0aec0',padding:12,callbacks:{label:c=>' '+fmt(c.raw,true)}}},
+    scales:{x:{ticks:{color:'#a0aec0'},grid:{color:'rgba(0,0,0,.04)'},border:{color:'rgba(0,0,0,.07)'}},
+      y:{ticks:{color:'#a0aec0',callback:v=>fmt(v,true)},grid:{color:'rgba(0,0,0,.04)'},border:{color:'rgba(0,0,0,.07)'}}}};
+
+  chartBsBar=new Chart(document.getElementById('bsBarChart'),{
+    type:'bar',
+    data:{labels:['Total Assets','Total Liabilities','Net Equity','Working Capital'],
+      datasets:[{data:[totalAssets,totalLiab,totalEquity,workCap],
+        backgroundColor:['rgba(124,110,245,.75)','rgba(225,112,85,.65)','rgba(0,184,148,.7)','rgba(9,132,227,.65)'],
+        borderRadius:6}]},
+    options:{...BOPTS,plugins:{...BOPTS.plugins,legend:{display:false}}}
+  });
+
+  chartBsDoughnut=new Chart(document.getElementById('bsDoughnut'),{
+    type:'doughnut',
+    data:{labels:['Equity','Liabilities'],
+      datasets:[{data:[Math.max(totalEquity,0),totalLiab],
+        backgroundColor:['rgba(0,184,148,.8)','rgba(225,112,85,.7)'],
+        borderColor:['rgba(0,184,148,.3)','rgba(225,112,85,.3)'],
+        borderWidth:1,hoverOffset:4}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'65%',
+      plugins:{legend:{labels:{color:'#4a5568',font:{family:'Outfit',size:11},boxWidth:12}},
+        tooltip:{backgroundColor:'#1a1d2e',borderColor:'rgba(0,0,0,.1)',borderWidth:1,titleColor:'#ffffff',bodyColor:'#a0aec0',padding:12,callbacks:{label:c=>' '+fmt(c.raw,true)}}}}
+  });
+
+  // BS Ratios
+  const bsRatios=[
+    {
+      label:'Current Ratio', col:'var(--teal-light)',
+      display:curRatio!==null?curRatio.toFixed(2)+'x':'—',
+      fill:curRatio!==null?Math.min((curRatio/3)*100,100):0,
+      explain:`${fmt(curAssets,true)} in current assets vs ${fmt(curLiab,true)} in current liabilities. Can you pay short-term bills?`,
+      meaning:!curRatio?{cls:'neutral',txt:'No current liability data.'}
+             :curRatio>=2?{cls:'good',txt:'Very healthy — $2+ in assets for every $1 of short-term debt.'}
+             :curRatio>=1?{cls:'warn',txt:'Adequate — you can cover liabilities, but limited cushion.'}
+             :             {cls:'bad', txt:'Tight — current liabilities exceed current assets.'},
+    },
+    {
+      label:'Debt-to-Equity', col:'var(--gold-light)',
+      display:dte!==null?dte.toFixed(2)+'x':'—',
+      fill:dte!==null?Math.min((dte/3)*100,100):0,
+      explain:`Total liabilities (${fmt(totalLiab,true)}) vs owner equity (${fmt(totalEquity,true)}). How much is debt-funded vs owner-funded.`,
+      meaning:!dte?{cls:'neutral',txt:'Not enough data.'}
+             :dte<=0.5?{cls:'good',txt:'Low leverage — mostly equity-funded. Low financial risk.'}
+             :dte<=1?  {cls:'good',txt:'Balanced — debt and equity are roughly even.'}
+             :dte<=2?  {cls:'warn',txt:'Moderate leverage — monitor debt service capacity.'}
+             :          {cls:'bad', txt:'High leverage — owes significantly more than equity.'},
+    },
+    {
+      label:'Equity Ratio', col:'var(--green-light)',
+      display:totalAssets?((totalEquity/totalAssets)*100).toFixed(1)+'%':'—',
+      fill:totalAssets?Math.min(Math.max(totalEquity/totalAssets*100,0),100):0,
+      explain:`Equity funds ${totalAssets?((totalEquity/totalAssets)*100).toFixed(1)+'%':'—'} of total assets (${fmt(totalAssets,true)}). Higher = stronger financial position.`,
+      meaning:!totalAssets?{cls:'neutral',txt:'No asset data.'}
+             :totalEquity/totalAssets>=0.5?{cls:'good',txt:'Strong — equity makes up the majority of asset funding.'}
+             :totalEquity/totalAssets>=0.3?{cls:'warn',txt:'Moderate — mix of debt and equity funding.'}
+             :                              {cls:'bad', txt:'Low — business is primarily debt-funded.'},
+    },
+    {
+      label:'Working Capital', col:'var(--blue-light)',
+      display:fmt(workCap,true),
+      fill:curAssets?Math.min(Math.max(workCap/curAssets*100,0),100):0,
+      explain:`Current Assets (${fmt(curAssets,true)}) minus Current Liabilities (${fmt(curLiab,true)}). The dollar cushion for near-term obligations.`,
+      meaning:workCap>0?{cls:'good',txt:'Positive — liquid buffer over short-term obligations.'}
+             :workCap===0?{cls:'warn',txt:'Break-even — assets exactly match liabilities.'}
+             :             {cls:'bad', txt:'Negative — short-term obligations exceed liquid assets.'},
+    },
+  ];
+
+  document.getElementById('bsRatioRow').innerHTML=bsRatios.map(r=>`
+    <div class="liq-card">
+      <div class="liq-period">■ ${dLabel}</div>
+      <div class="liq-label">${r.label}</div>
+      <div class="liq-val" style="color:${r.col}">${r.display}</div>
+      <div class="liq-bar"><div class="liq-barfill" style="width:${r.fill}%;background:${r.col}"></div></div>
+      <div class="liq-explain">${r.explain}</div>
+      <div class="liq-meaning ${r.meaning.cls}">💬 ${r.meaning.txt}</div>
+    </div>`).join('');
+
+  // BS Table
+  document.getElementById('bsPeriodBadge').textContent=`As of ${dLabel}`;
+  let bsRows='';
+  function renderBSSection(section,depth){
+    if(!section)return;
+    const sRows=section.Rows?.Row||[];
+    if(section.Header){
+      const label=section.Header.ColData?.[0]?.value||'';
+      bsRows+=`<tr class="gh"><td colspan="2">${label}</td></tr>`;
+    }
+    for(const r of sRows){
+      if(r.type==='Data'){
+        const vals=r.ColData||[];
+        const n=parseFloat(vals[vals.length-1]?.value||0)||0;
+        bsRows+=`<tr class="dr"><td>${vals[0]?.value||''}</td><td class="${n<0?'nv':''}">${fmt(n)}</td></tr>`;
+      } else if(r.type==='Section') renderBSSection(r,depth+1);
+    }
+    if(section.Summary){
+      const vals=section.Summary.ColData||[];
+      const n=parseFloat(vals[vals.length-1]?.value||0)||0;
+      bsRows+=`<tr class="st"><td>${vals[0]?.value||'Total'}</td><td class="${n<0?'nv':''}">${fmt(n)}</td></tr>`;
+    }
+  }
+  rows.forEach(r=>renderBSSection(r,0));
+  document.getElementById('bsBody').innerHTML=bsRows;
+}
+
+
+// ── MANAGEMENT REPORT ─────────────────────────────────────────────────────────
+let reportLoaded = false;
+
+
+async function loadReport() {
+  reportLoaded = false;
+  const start = document.getElementById('pnlStart').value;
+  const end   = document.getElementById('pnlEnd').value;
+  document.getElementById('lo').style.display = 'flex';
+  document.getElementById('rptPages').innerHTML = '<div style="padding:40px;color:var(--text-muted);font-size:13px">Loading report data…</div>';
+
+  // Fetch with timeout helper
+  async function fetchWithTimeout(url, ms=15000) {
+    const ctrl = new AbortController();
+    const id = setTimeout(() => ctrl.abort(), ms);
+    try {
+      const r = await fetch(url, { signal: ctrl.signal });
+      clearTimeout(id);
+      return await r.json();
+    } catch(e) {
+      clearTimeout(id);
+      throw e;
+    }
+  }
+
+  let plData = null, bsData = null, arData = null, apData = null;
+  let errors = [];
+
+  document.getElementById('rptPages').innerHTML = '<div style="padding:40px;color:var(--text-muted);font-size:13px">⏳ Loading P&L…</div>';
+  try { plData = await fetchWithTimeout(`/api/pnl?start_date=${start}&end_date=${end}`); if(plData.error) errors.push('P&L: ' + JSON.stringify(plData.error)); }
+  catch(e) { errors.push('P&L: ' + e.message); }
+
+  document.getElementById('rptPages').innerHTML = '<div style="padding:40px;color:var(--text-muted);font-size:13px">⏳ Loading Balance Sheet…</div>';
+  try { bsData = await fetchWithTimeout(`/api/balance-sheet?as_of_date=${end}`); if(bsData.error) errors.push('Balance Sheet: ' + JSON.stringify(bsData.error)); }
+  catch(e) { errors.push('Balance Sheet: ' + e.message); }
+
+  document.getElementById('rptPages').innerHTML = '<div style="padding:40px;color:var(--text-muted);font-size:13px">⏳ Loading AR Aging…</div>';
+  try { arData = await fetchWithTimeout(`/api/ar-aging?as_of_date=${end}`); if(arData.error){ console.warn('AR error:', arData.error); arData = null; } }
+  catch(e) { console.warn('AR Aging not available:', e.message); arData = null; }
+
+  document.getElementById('rptPages').innerHTML = '<div style="padding:40px;color:var(--text-muted);font-size:13px">⏳ Loading AP Aging…</div>';
+  try { apData = await fetchWithTimeout(`/api/ap-aging?as_of_date=${end}`); if(apData.error){ console.warn('AP error:', apData.error); apData = null; } }
+  catch(e) { console.warn('AP Aging not available:', e.message); apData = null; }
+
+  document.getElementById('lo').style.display = 'none';
+
+  if(!plData || !bsData || errors.length) {
+    document.getElementById('rptPages').innerHTML = `<div style="padding:40px;color:var(--red-light);font-size:13px;line-height:2">
+      <strong>Could not load report.</strong><br><br>
+      ${errors.map(e=>'⚠️ ' + e).join('<br>')}
+      <br><br>Make sure you are connected to QuickBooks and try again.
+    </div>`;
+    return;
+  }
+
+  buildReport(plData, bsData, arData, apData, start, end);
+  reportLoaded = true;
+}
+
+function fmtR(n) {
+  if (n == null || isNaN(n)) return '—';
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
+}
+function fmtRneg(n) { // show negatives in parens
+  if (n == null || isNaN(n)) return '—';
+  const abs = Math.abs(n);
+  const s = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(abs);
+  return n < 0 ? `(${s})` : s;
+}
+
+function buildReport(plData, bsData, arData, apData, start, end) {
+  const startD = new Date(start + 'T00:00:00');
+  const endD   = new Date(end + 'T00:00:00');
+  const periodLabel = `${MONTHS[startD.getMonth()]} ${startD.getFullYear()} – ${MONTHS[endD.getMonth()]} ${endD.getFullYear()}`;
+  const asOfLabel   = `As of ${MONTHS[endD.getMonth()]} ${endD.getDate()}, ${endD.getFullYear()}`;
+  const genLabel    = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
+  // Pull summary numbers for cover page
+  const plRows = plData.Rows?.Row || [];
+  const netRow = plRows.find(r => r.type === 'Section' && r.Summary?.ColData?.[0]?.value?.toLowerCase().includes('net income'));
+  const incSec = plRows.find(r => r.type === 'Section' && r.Header?.ColData?.[0]?.value?.toLowerCase().includes('income'));
+  const expSec = plRows.find(r => r.type === 'Section' && r.Header?.ColData?.[0]?.value?.toLowerCase().includes('expense'));
+  const totalRev = rowVal(incSec?.Summary);
+  const totalExp = rowVal(expSec?.Summary);
+  const netInc   = rowVal(netRow?.Summary);
+
+  const bsRows = bsData.Rows?.Row || [];
+  function findBSTotal(label, rws) {
+    rws = rws || bsRows;
+    for (const r of rws) {
+      if (r.type === 'Section') {
+        const s = r.Summary?.ColData?.[0]?.value?.toLowerCase();
+        if (s?.includes(label.toLowerCase())) return rowVal(r.Summary);
+        const sub = findBSTotal(label, r.Rows?.Row || []);
+        if (sub !== null) return sub;
+      }
+    }
+    return null;
+  }
+  const totalAssets = findBSTotal('total assets') || 0;
+  const totalLiab   = findBSTotal('total liabilities') || 0;
+  const totalEquity = findBSTotal('total equity') || (totalAssets - totalLiab);
+
+  // ── COVER PAGE ──
+  const coverPage = `
+  <div class="rpt-page rpt-cover">
+    <div class="rpt-cover-top">
+      <div>
+        <div class="rpt-cover-logo">${clientCompanyName || 'Clear Books Advisory'}</div>
+        <div class="rpt-cover-rule"></div>
+        <div class="rpt-cover-tagline">Prepared by Clear Books Advisory</div>
+      </div>
+      <div class="rpt-cover-title">
+        <h1>Management Financial Report</h1>
+        <div class="rpt-subtitle">Confidential — For Internal Use Only</div>
+        <div class="rpt-cover-meta" style="margin-top:32px">
+          <div class="rpt-cover-meta-row"><span class="rpt-cover-meta-label">Period</span><span class="rpt-cover-meta-val">${periodLabel}</span></div>
+          <div class="rpt-cover-meta-row"><span class="rpt-cover-meta-label">Balance Date</span><span class="rpt-cover-meta-val">${asOfLabel}</span></div>
+          <div class="rpt-cover-meta-row"><span class="rpt-cover-meta-label">Prepared</span><span class="rpt-cover-meta-val">${genLabel}</span></div>
+          <div class="rpt-cover-meta-row"><span class="rpt-cover-meta-label">Prepared For</span><span class="rpt-cover-meta-val">${clientCompanyName || '—'}</span></div>
+          <div class="rpt-cover-meta-row"><span class="rpt-cover-meta-label">Prepared By</span><span class="rpt-cover-meta-val">Clear Books Advisory</span></div>
+        </div>
+      </div>
+      <div style="margin-top:48px">
+        <div style="font-size:7.5pt;text-transform:uppercase;letter-spacing:.12em;color:var(--text-muted);margin-bottom:12px">Executive Summary</div>
+        <div class="rpt-summary-grid">
+          <div class="rpt-sbox">
+            <div class="rpt-sbox-label">Total Revenue</div>
+            <div class="rpt-sbox-val">${fmtR(totalRev)}</div>
+            <div class="rpt-sbox-sub">${periodLabel}</div>
+          </div>
+          <div class="rpt-sbox ${netInc >= 0 ? 'green' : 'red'}">
+            <div class="rpt-sbox-label">Net Income</div>
+            <div class="rpt-sbox-val" style="color:${netInc >= 0 ? 'var(--green-light)' : 'var(--red-light)'}">${fmtR(netInc)}</div>
+            <div class="rpt-sbox-sub">${totalRev ? (netInc/totalRev*100).toFixed(1) + '% net margin' : ''}</div>
+          </div>
+          <div class="rpt-sbox">
+            <div class="rpt-sbox-label">Total Assets</div>
+            <div class="rpt-sbox-val">${fmtR(totalAssets)}</div>
+            <div class="rpt-sbox-sub">${asOfLabel}</div>
+          </div>
+        </div>
+        <div class="rpt-summary-grid">
+          <div class="rpt-sbox red">
+            <div class="rpt-sbox-label">Total Expenses</div>
+            <div class="rpt-sbox-val">${fmtR(totalExp)}</div>
+            <div class="rpt-sbox-sub">${periodLabel}</div>
+          </div>
+          <div class="rpt-sbox">
+            <div class="rpt-sbox-label">Total Liabilities</div>
+            <div class="rpt-sbox-val">${fmtR(totalLiab)}</div>
+            <div class="rpt-sbox-sub">${asOfLabel}</div>
+          </div>
+          <div class="rpt-sbox ${totalEquity >= 0 ? 'green' : 'red'}">
+            <div class="rpt-sbox-label">Net Equity</div>
+            <div class="rpt-sbox-val" style="color:${totalEquity >= 0 ? 'var(--green-light)' : 'var(--red-light)'}">${fmtR(totalEquity)}</div>
+            <div class="rpt-sbox-sub">${asOfLabel}</div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:32px;padding:14px 18px;background:#f9fafb;border-radius:6px;border-left:3px solid var(--blue)">
+        <div style="font-size:7.5pt;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-bottom:6px">Contents</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 24px;font-size:8.5pt;color:var(--text-secondary)">
+          <div>1 · Cover Page</div>
+          <div>3 · Balance Sheet</div>
+          <div>2 · Income Statement (P&L)</div>
+          <div>4 · AR Aging</div>
+          <div></div>
+          <div>5 · AP Aging</div>
+        </div>
+      </div>
+    </div>
+    <div class="rpt-cover-bottom">
+      <div class="rpt-cover-conf">Confidential · Management Use Only · Prepared by Clear Books Advisory</div>
+      <div class="rpt-cover-page">Page 1</div>
+    </div>
+  </div>`;
+
+  // ── P&L PAGE ──
+  function buildPLTable(data) {
+    const rows = data.Rows?.Row || [];
+    const cols = data.Columns?.Column || [];
+    const months = cols.slice(1, -1).map(c => c.ColTitle || '');
+    let html = `<table class="rpt-table">
+      <thead><tr>
+        <th style="width:220px;text-align:left">Account</th>
+        ${months.map(m => `<th>${m}</th>`).join('')}
+        <th>Total</th>
+      </tr></thead>
+      <tbody>`;
+    function renderSec(sec) {
+      if (!sec) return;
+      const sRows = sec.Rows?.Row || [];
+      if (sec.Header) {
+        const label = sec.Header.ColData?.[0]?.value || '';
+        html += `<tr class="rh"><td colspan="${months.length + 2}">${label}</td></tr>`;
+      }
+      for (const r of sRows) {
+        if (r.type === 'Data') {
+          const vals = r.ColData || [];
+          const name = vals[0]?.value || '';
+          const mVals = vals.slice(1, -1);
+          const tot = parseFloat(vals[vals.length - 1]?.value || 0) || 0;
+          html += `<tr class="rd"><td>${name}</td>`;
+          mVals.forEach(v => {
+            const n = parseFloat(v?.value || 0) || 0;
+            html += `<td class="${n < 0 ? 'rpt-nv' : ''}">${fmtRneg(n)}</td>`;
+          });
+          html += `<td class="${tot < 0 ? 'rpt-nv' : ''}">${fmtRneg(tot)}</td></tr>`;
+        } else if (r.type === 'Section') renderSec(r);
+      }
+      if (sec.Summary) {
+        const vals = sec.Summary.ColData || [];
+        const name = vals[0]?.value || 'Total';
+        const mVals = vals.slice(1, -1);
+        const tot = parseFloat(vals[vals.length - 1]?.value || 0) || 0;
+        const isNet = name.toLowerCase().includes('net income');
+        html += `<tr class="${isNet ? 'rc' : 'rs'}"><td>${name}</td>`;
+        mVals.forEach(v => {
+          const n = parseFloat(v?.value || 0) || 0;
+          html += `<td class="${n < 0 ? 'rpt-nv' : ''}">${fmtRneg(n)}</td>`;
+        });
+        html += `<td class="${tot < 0 ? 'rpt-nv' : ''}">${fmtRneg(tot)}</td></tr>`;
+        if (isNet) html += `<tr class="rsp"><td></td></tr>`;
+      }
+    }
+    rows.forEach(r => renderSec(r));
+    html += `</tbody></table>`;
+    return html;
+  }
+
+  const plPage = `
+  <div class="rpt-page">
+    <div class="rpt-page-header">
+      <div class="rpt-page-brand">${clientCompanyName || 'Clear Books Advisory'}<small>Prepared by Clear Books Advisory</small></div>
+      <div class="rpt-stmt-title">
+        <h2>Income Statement</h2>
+        <p>${periodLabel}</p>
+      </div>
+    </div>
+    ${buildPLTable(plData)}
+    <div class="rpt-page-footer">
+      <span>${clientCompanyName || 'Clear Books Advisory'} · Prepared by Clear Books Advisory</span>
+      <span>${periodLabel}</span>
+      <span>Page 2</span>
+    </div>
+  </div>`;
+
+  // ── BS PAGE ──
+  function buildBSTable(data) {
+    const rows = data.Rows?.Row || [];
+    let html = `<table class="rpt-table">
+      <thead><tr>
+        <th style="text-align:left">Account</th>
+        <th>Balance</th>
+      </tr></thead>
+      <tbody>`;
+    function renderSec(sec) {
+      if (!sec) return;
+      const sRows = sec.Rows?.Row || [];
+      if (sec.Header) {
+        html += `<tr class="rh"><td colspan="2">${sec.Header.ColData?.[0]?.value || ''}</td></tr>`;
+      }
+      for (const r of sRows) {
+        if (r.type === 'Data') {
+          const vals = r.ColData || [];
+          const n = parseFloat(vals[vals.length - 1]?.value || 0) || 0;
+          html += `<tr class="rd"><td>${vals[0]?.value || ''}</td><td class="${n < 0 ? 'rpt-nv' : ''}">${fmtR(n)}</td></tr>`;
+        } else if (r.type === 'Section') renderSec(r);
+      }
+      if (sec.Summary) {
+        const vals = sec.Summary.ColData || [];
+        const n = parseFloat(vals[vals.length - 1]?.value || 0) || 0;
+        const isGrand = (vals[0]?.value || '').toLowerCase().includes('total assets') || (vals[0]?.value || '').toLowerCase().includes('total liabilities and equity');
+        html += `<tr class="${isGrand ? 'rc' : 'rs'}"><td>${vals[0]?.value || 'Total'}</td><td class="${n < 0 ? 'rpt-nv' : ''}">${fmtR(n)}</td></tr>`;
+      }
+    }
+    rows.forEach(r => renderSec(r));
+    html += `</tbody></table>`;
+    return html;
+  }
+
+  const bsPage = `
+  <div class="rpt-page">
+    <div class="rpt-page-header">
+      <div class="rpt-page-brand">${clientCompanyName || 'Clear Books Advisory'}<small>Prepared by Clear Books Advisory</small></div>
+      <div class="rpt-stmt-title">
+        <h2>Balance Sheet</h2>
+        <p>${asOfLabel}</p>
+      </div>
+    </div>
+    ${buildBSTable(bsData)}
+    <div class="rpt-page-footer">
+      <span>${clientCompanyName || 'Clear Books Advisory'} · Prepared by Clear Books Advisory</span>
+      <span>${asOfLabel}</span>
+      <span>Page 3</span>
+    </div>
+  </div>`;
+
+  // ── AGING TABLE BUILDER ──
+  function buildAgingPage(data, title, pageNum, asOf) {
+    if (!data || !data.Rows || data.error) return `
+    <div class="rpt-page-landscape">
+      <div class="rpt-page-header">
+        <div class="rpt-page-brand">${clientCompanyName || 'Clear Books Advisory'}<small>Prepared by Clear Books Advisory</small></div>
+        <div class="rpt-stmt-title"><h2>${title}</h2><p>${asOf}</p></div>
+      </div>
+      <div style="margin-top:60px;text-align:center;color:var(--text-muted);font-size:9pt">No ${title} data available for this period.</div>
+      <div class="rpt-page-footer">
+        <span>${clientCompanyName || 'Clear Books Advisory'} · Prepared by Clear Books Advisory</span><span>${asOf}</span><span>Page ${pageNum}</span>
+      </div>
+    </div>`;
+
+    // Parse columns from QBO response
+    const cols = data.Columns?.Column || [];
+    const colTitles = cols.map(c => c.ColTitle || '');
+
+    // Build rows
+    const rows = data.Rows?.Row || [];
+    let rowsHtml = '';
+    let grandTotals = null;
+
+    rows.forEach(r => {
+      if (r.type === 'Data') {
+        const vals = r.ColData || [];
+        const name = vals[0]?.value || '';
+        const numCols = vals.slice(1);
+        // Highlight rows with overdue amounts (cols 2+ are aging buckets)
+        const hasOverdue = numCols.slice(1).some(v => parseFloat(v?.value||0) > 0);
+        rowsHtml += `<tr class="${hasOverdue ? 'aging-overdue' : ''}">`;
+        rowsHtml += `<td>${name}</td>`;
+        numCols.forEach(v => {
+          const n = parseFloat(v?.value || 0);
+          rowsHtml += `<td>${n !== 0 ? fmtR(n) : '—'}</td>`;
+        });
+        rowsHtml += `</tr>`;
+      } else if (r.type === 'Section') {
+        // Section header
+        if (r.Header) {
+          const lbl = r.Header.ColData?.[0]?.value || '';
+          if (lbl) rowsHtml += `<tr><td colspan="${colTitles.length}" style="font-size:7pt;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);padding:10px 10px 3px;background:#f9fafb;font-weight:600">${lbl}</td></tr>`;
+        }
+        (r.Rows?.Row || []).forEach(sub => {
+          if (sub.type === 'Data') {
+            const vals = sub.ColData || [];
+            const name = vals[0]?.value || '';
+            const numCols = vals.slice(1);
+            const hasOverdue = numCols.slice(1).some(v => parseFloat(v?.value||0) > 0);
+            rowsHtml += `<tr class="${hasOverdue ? 'aging-overdue' : ''}">`;
+            rowsHtml += `<td style="padding-left:20px">${name}</td>`;
+            numCols.forEach(v => {
+              const n = parseFloat(v?.value || 0);
+              rowsHtml += `<td>${n !== 0 ? fmtR(n) : '—'}</td>`;
+            });
+            rowsHtml += `</tr>`;
+          }
+        });
+        if (r.Summary) {
+          const vals = r.Summary.ColData || [];
+          const name = vals[0]?.value || 'Total';
+          rowsHtml += `<tr style="background:#f0f0fa;font-weight:600;border-top:1px solid #ddd">`;
+          rowsHtml += `<td>${name}</td>`;
+          vals.slice(1).forEach(v => {
+            const n = parseFloat(v?.value || 0);
+            rowsHtml += `<td style="font-weight:700">${n !== 0 ? fmtR(n) : '—'}</td>`;
+          });
+          rowsHtml += `</tr>`;
+        }
+      }
+    });
+
+    // Grand total from Rows.Summary
+    if (data.Rows?.Summary) {
+      const vals = data.Rows.Summary.ColData || [];
+      grandTotals = vals;
+    }
+
+    const grandHtml = grandTotals ? `
+      <tr class="aging-total">
+        <td>TOTAL</td>
+        ${grandTotals.slice(1).map(v => {
+          const n = parseFloat(v?.value || 0);
+          return `<td>${n !== 0 ? fmtR(n) : '—'}</td>`;
+        }).join('')}
+      </tr>` : '';
+
+    return `
+    <div class="rpt-page-landscape">
+      <div class="rpt-page-header">
+        <div class="rpt-page-brand">${clientCompanyName || 'Clear Books Advisory'}<small>Prepared by Clear Books Advisory</small></div>
+        <div class="rpt-stmt-title"><h2>${title}</h2><p>${asOf}</p></div>
+      </div>
+      <table class="aging-table">
+        <thead>
+          <tr>
+            ${colTitles.map((h,i) => `<th style="${i===0?'text-align:left;width:220px':'min-width:90px'}">${h || (i===0?'Name':'')}</th>`).join('')}
+          </tr>
+        </thead>
+        <tbody>
+          ${rowsHtml}
+          ${grandHtml}
+        </tbody>
+      </table>
+      <div class="rpt-page-footer">
+        <span>${clientCompanyName || 'Clear Books Advisory'} · Prepared by Clear Books Advisory</span>
+        <span>${asOf}</span>
+        <span>Page ${pageNum}</span>
+      </div>
+    </div>`;
+  }
+
+  const arPage = buildAgingPage(arData, 'Accounts Receivable Aging Summary', 4, asOfLabel);
+  const apPage = buildAgingPage(apData, 'Accounts Payable Aging Summary', 5, asOfLabel);
+
+  document.getElementById('rptPages').innerHTML = coverPage + plPage + bsPage + arPage + apPage;
+}
+
+
+// ── VENDOR ANALYSIS ───────────────────────────────────────────────────────────
+let vendorLoaded = false;
+let chartVendorBar = null, chartVendorDoughnut = null;
+
+async function loadVendors() {
+  if (vendorLoaded) return;
+  const start = document.getElementById('pnlStart').value;
+  const end   = document.getElementById('pnlEnd').value;
+  document.getElementById('lo').style.display = 'flex';
+  try {
+    const r = await fetch(`/api/vendor-spend?start_date=${start}&end_date=${end}`);
+    const data = await r.json();
+    if (data.error) throw new Error(JSON.stringify(data.error));
+    renderVendors(data);
+    vendorLoaded = true;
+  } catch(e) {
+    console.error('Vendor error:', e);
+    document.getElementById('vendorTableBody').innerHTML = `<tr><td colspan="5" style="padding:40px;color:var(--red-light);text-align:center">Failed to load vendor data: ${e.message}</td></tr>`;
+  } finally {
+    document.getElementById('lo').style.display = 'none';
+  }
+}
+
+function renderVendors(data) {
+  // Parse vendors from QBO PurchaseByVendor response
+  const rows = data.Rows?.Row || [];
+  let vendors = [];
+
+  rows.forEach(r => {
+    if (r.type === 'Section' && r.Header) {
+      const name = r.Header.ColData?.[0]?.value || '';
+      if (!name || name.toLowerCase() === 'total') return;
+      // Get total from Summary
+      const total = parseFloat(r.Summary?.ColData?.[r.Summary.ColData.length-1]?.value || 0) || 0;
+      if (total > 0) vendors.push({ name, total });
+    } else if (r.type === 'Data') {
+      const vals = r.ColData || [];
+      const name = vals[0]?.value || '';
+      const total = parseFloat(vals[vals.length-1]?.value || 0) || 0;
+      if (name && total > 0) vendors.push({ name, total });
+    }
+  });
+
+  // Sort descending
+  vendors.sort((a,b) => b.total - a.total);
+
+  if (vendors.length === 0) {
+    document.getElementById('vendorTableBody').innerHTML = '<tr><td colspan="5" style="padding:40px;text-align:center;color:var(--text-muted)">No vendor spend data found for this period.</td></tr>';
+    return;
+  }
+
+  const grandTotal = vendors.reduce((s,v) => s+v.total, 0);
+  const top10 = vendors.slice(0, 10);
+  const top10Total = top10.reduce((s,v) => s+v.total, 0);
+
+  // KPI cards
+  document.getElementById('vTotalSpend').textContent = fmt(grandTotal, true);
+  document.getElementById('vTopVendor').textContent = vendors[0]?.name || '—';
+  document.getElementById('vVendorCount').textContent = vendors.length;
+  document.getElementById('vTop10Pct').textContent = grandTotal ? (top10Total/grandTotal*100).toFixed(1)+'%' : '—';
+  document.getElementById('vAvgSpend').textContent = fmt(grandTotal/vendors.length, true);
+  document.getElementById('vLargestBill').textContent = fmt(vendors[0]?.total || 0, true);
+
+  // Bar chart
+  const colors = ['#7c6ef5','#5c4fd6','#a89cf7','#0984e3','#74b9ff','#00b894','#55efc4','#e67e22','#fdcb6e','#e17055'];
+  if (chartVendorBar) chartVendorBar.destroy();
+  chartVendorBar = new Chart(document.getElementById('chartVendorBar'), {
+    type: 'bar',
+    data: {
+      labels: top10.map(v => v.name.length > 20 ? v.name.substring(0,18)+'…' : v.name),
+      datasets: [{ label: 'Spend', data: top10.map(v=>v.total), backgroundColor: colors, borderRadius: 6, borderSkipped: false }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ' ' + fmt(ctx.raw) } } },
+      scales: {
+        x: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { callback: v => fmt(v, true), font: { size: 10 } } },
+        y: { grid: { display: false }, ticks: { font: { size: 10 } } }
+      }
+    }
+  });
+
+  // Doughnut chart
+  const restTotal = grandTotal - top10Total;
+  if (chartVendorDoughnut) chartVendorDoughnut.destroy();
+  chartVendorDoughnut = new Chart(document.getElementById('chartVendorDoughnut'), {
+    type: 'doughnut',
+    data: {
+      labels: [...top10.map(v => v.name.length > 16 ? v.name.substring(0,14)+'…' : v.name), 'All Others'],
+      datasets: [{ data: [...top10.map(v=>v.total), restTotal], backgroundColor: [...colors, '#dfe6e9'], borderWidth: 2, borderColor: '#fff' }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'right', labels: { font: { size: 9 }, boxWidth: 12, padding: 8 } },
+        tooltip: { callbacks: { label: ctx => ' ' + fmt(ctx.raw) + ' (' + (ctx.raw/grandTotal*100).toFixed(1) + '%)' } }
+      },
+      cutout: '60%'
+    }
+  });
+
+  // Table
+  const tbody = document.getElementById('vendorTableBody');
+  tbody.innerHTML = vendors.map((v, i) => {
+    const pct = (v.total / grandTotal * 100).toFixed(1);
+    const isTop = i < 10;
+    return `<tr style="border-bottom:1px solid var(--border);${i%2===0?'background:#fafbfc':''}">
+      <td style="padding:8px 12px;color:var(--text-muted);font-size:.75rem">${i+1}</td>
+      <td style="padding:8px 12px;font-weight:${isTop?'600':'400'};color:${isTop?'var(--text-primary)':'var(--text-secondary)'}">${v.name}</td>
+      <td style="padding:8px 12px;text-align:right;font-weight:600;color:var(--text-primary)">${fmt(v.total)}</td>
+      <td style="padding:8px 12px;text-align:right;color:var(--text-muted)">${pct}%</td>
+      <td style="padding:8px 12px;text-align:right">
+        <div style="background:var(--border);border-radius:3px;height:6px;width:100%;overflow:hidden">
+          <div style="background:${isTop?'var(--blue)':'var(--text-muted)'};width:${Math.min(parseFloat(pct)*3,100)}%;height:100%;border-radius:3px"></div>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+checkStatus();
+</script>
+</body>
+</html>
