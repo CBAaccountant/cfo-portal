@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Clear Books Advisory | Bookkeeping Services & Pricing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --blue-dark: #5c4fd6;
+  --blue: #7c6ef5;
+  --blue-light: #a89cf7;
+  --green: #00b894;
+  --gold: #e67e22;
+  --red: #e17055;
+  --text-primary: #1a1d2e;
+  --text-secondary: #4a5568;
+  --text-muted: #a0aec0;
+  --border: rgba(0,0,0,0.07);
+  --border-strong: rgba(0,0,0,0.13);
+  --card-bg: #ffffff;
+  --shadow: 0 1px 12px rgba(0,0,0,0.08);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Outfit',sans-serif;background:#f0f1f5;color:var(--text-primary);min-height:100vh;font-size:14px}
+
+/* NAV */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;border-bottom:1px solid var(--border);background:#fff;position:sticky;top:0;z-index:100;box-shadow:0 1px 8px rgba(0,0,0,0.06)}
+.tb-brand{font-family:'Cormorant Garamond',serif;font-size:1.35rem;font-weight:700;letter-spacing:.06em;color:#1a1d2e;text-decoration:none}
+.tb-brand span{color:var(--blue)}
+.tb-badge{font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);margin-top:2px}
+.tb-links{display:flex;align-items:center;gap:16px}
+.tb-link{padding:7px 14px;background:transparent;border:1px solid var(--border-strong);color:var(--text-secondary);border-radius:7px;font-family:'Outfit',sans-serif;font-size:.75rem;cursor:pointer;letter-spacing:.05em;transition:all .2s;text-transform:uppercase;text-decoration:none}
+.tb-link:hover{border-color:var(--blue);color:var(--blue)}
+.tb-link.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+.tb-link.primary:hover{background:var(--blue-dark)}
+
+/* HERO */
+.hero{text-align:center;padding:64px 32px 48px;max-width:760px;margin:0 auto}
+.hero-title{font-family:'Cormorant Garamond',serif;font-size:2.6rem;font-weight:700;line-height:1.2;margin-bottom:16px}
+.hero-title span{color:var(--blue)}
+.hero-sub{color:var(--text-secondary);font-size:1rem;line-height:1.7;max-width:600px;margin:0 auto 32px}
+
+/* PRICING CALCULATOR */
+.calc-section{max-width:700px;margin:0 auto 56px;padding:0 32px}
+.section-label{font-size:.68rem;letter-spacing:.15em;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px;font-weight:500}
+.calc-card{background:var(--card-bg);border:1px solid var(--border);border-radius:16px;padding:32px 36px;box-shadow:var(--shadow)}
+.calc-title{font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:600;margin-bottom:4px}
+.calc-desc{color:var(--text-secondary);font-size:.85rem;line-height:1.6;margin-bottom:24px}
+.calc-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+@media(max-width:600px){.calc-row{grid-template-columns:1fr}}
+.field label{display:block;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;font-weight:500}
+.field select,.field input{width:100%;background:#f7f8fa;border:1px solid var(--border-strong);color:var(--text-primary);font-family:'Outfit',sans-serif;font-size:.85rem;padding:10px 14px;border-radius:8px;outline:none;transition:border .2s}
+.field select:focus,.field input:focus{border-color:var(--blue)}
+.calc-result{margin-top:24px;padding:20px 24px;background:linear-gradient(135deg,#f8f7ff,#f0f1f5);border:1px solid var(--blue-light);border-radius:12px;text-align:center}
+.calc-result-label{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px;font-weight:500}
+.calc-result-price{font-family:'Cormorant Garamond',serif;font-size:2.2rem;font-weight:700;color:var(--blue-dark)}
+.calc-result-note{font-size:.78rem;color:var(--text-secondary);margin-top:6px;line-height:1.5}
+.calc-result-tier{display:inline-block;margin-top:8px;padding:4px 12px;border-radius:20px;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;font-weight:600}
+.tier-essential{background:#e0f7f0;color:#00b894}
+.tier-growth{background:#eee8ff;color:#7c6ef5}
+.tier-premium{background:#fef0e3;color:#e67e22}
+
+/* SERVICE TIERS */
+.tiers-section{max-width:1100px;margin:0 auto 56px;padding:0 32px}
+.tiers-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+@media(max-width:900px){.tiers-grid{grid-template-columns:1fr}}
+.tier-card{background:var(--card-bg);border:1px solid var(--border);border-radius:16px;padding:32px 28px;position:relative;overflow:hidden;transition:all .25s;display:flex;flex-direction:column}
+.tier-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.tier-card.essential::before{background:var(--green)}
+.tier-card.growth::before{background:var(--blue)}
+.tier-card.premium::before{background:var(--gold)}
+.tier-card:hover{border-color:var(--border-strong);box-shadow:var(--shadow);transform:translateY(-2px)}
+.tier-card.featured{border-color:var(--blue-light);box-shadow:0 4px 24px rgba(124,110,245,0.15)}
+.tier-name{font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;font-weight:600;margin-bottom:8px}
+.tier-card.essential .tier-name{color:var(--green)}
+.tier-card.growth .tier-name{color:var(--blue)}
+.tier-card.premium .tier-name{color:var(--gold)}
+.tier-price{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:700;margin-bottom:4px}
+.tier-freq{font-size:.78rem;color:var(--text-muted);margin-bottom:4px}
+.tier-ideal{font-size:.78rem;color:var(--text-secondary);line-height:1.5;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.tier-features{list-style:none;flex:1}
+.tier-features li{font-size:.82rem;color:var(--text-secondary);line-height:1.6;padding:5px 0 5px 22px;position:relative}
+.tier-features li::before{content:'';position:absolute;left:0;top:11px;width:12px;height:12px;border-radius:50%;border:2px solid var(--green);background:transparent}
+.tier-features li.included::before{background:var(--green);border-color:var(--green)}
+.tier-cta{margin-top:20px}
+.tier-btn{display:block;width:100%;padding:11px 0;text-align:center;border-radius:8px;font-family:'Outfit',sans-serif;font-size:.82rem;font-weight:500;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:all .2s;text-decoration:none;border:1px solid var(--border-strong);background:transparent;color:var(--text-secondary)}
+.tier-btn:hover{border-color:var(--blue);color:var(--blue)}
+.tier-card.featured .tier-btn{background:var(--blue);border-color:var(--blue);color:#fff}
+.tier-card.featured .tier-btn:hover{background:var(--blue-dark)}
+
+/* PRICING FACTORS */
+.factors-section{max-width:900px;margin:0 auto 56px;padding:0 32px}
+.factors-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+@media(max-width:700px){.factors-grid{grid-template-columns:1fr}}
+.factor-card{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:24px 24px}
+.factor-icon{font-size:1.6rem;margin-bottom:10px}
+.factor-title{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:600;margin-bottom:6px}
+.factor-desc{font-size:.82rem;color:var(--text-secondary);line-height:1.6}
+
+/* ADD-ONS */
+.addons-section{max-width:900px;margin:0 auto 56px;padding:0 32px}
+.addons-table{width:100%;background:var(--card-bg);border:1px solid var(--border);border-radius:12px;overflow:hidden;border-collapse:collapse}
+.addons-table th{text-align:left;font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);font-weight:500;padding:14px 20px;border-bottom:1px solid var(--border);background:#f7f8fa}
+.addons-table td{padding:14px 20px;font-size:.85rem;color:var(--text-secondary);border-bottom:1px solid var(--border)}
+.addons-table tr:last-child td{border-bottom:none}
+.addons-table td:last-child{font-weight:600;color:var(--text-primary);white-space:nowrap}
+
+/* CTA */
+.cta-section{text-align:center;padding:48px 32px 64px;max-width:600px;margin:0 auto}
+.cta-title{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:700;margin-bottom:12px}
+.cta-sub{font-size:.88rem;color:var(--text-secondary);line-height:1.7;margin-bottom:28px}
+.cta-btn{display:inline-block;padding:14px 36px;background:var(--blue);border:1px solid var(--blue);color:#fff;border-radius:8px;font-family:'Outfit',sans-serif;font-size:.88rem;font-weight:500;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:all .2s;text-decoration:none}
+.cta-btn:hover{background:var(--blue-dark);box-shadow:0 0 24px rgba(92,79,214,.3)}
+
+/* FOOTER */
+.footer{padding:24px 32px;text-align:center;font-size:.72rem;color:var(--text-muted);border-top:1px solid var(--border);letter-spacing:.04em}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="topbar">
+  <div>
+    <a href="/" class="tb-brand">Clear<span>Books</span></a>
+    <div class="tb-badge">Advisory & CFO Services</div>
+  </div>
+  <div class="tb-links">
+    <a href="/services.html" class="tb-link" style="border-color:var(--blue);color:var(--blue)">Services</a>
+    <a href="/login.html" class="tb-link primary">Client Login</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <h1 class="hero-title">Bookkeeping Services<br/><span>Priced Right</span></h1>
+  <p class="hero-sub">Transparent, value-based pricing so you know exactly what you're paying for. Choose the tier that fits your business, or use the calculator below for a custom estimate.</p>
+</section>
+
+<!-- PRICING CALCULATOR -->
+<section class="calc-section">
+  <div class="section-label">Pricing Calculator</div>
+  <div class="calc-card">
+    <div class="calc-title">Estimate Your Monthly Fee</div>
+    <div class="calc-desc">Answer a few questions to get a ballpark monthly price based on your business profile.</div>
+    <div class="calc-row">
+      <div class="field">
+        <label for="revenue">Monthly Revenue</label>
+        <select id="revenue">
+          <option value="0-25k">Under $25,000</option>
+          <option value="25k-50k">$25,000 - $50,000</option>
+          <option value="50k-100k">$50,000 - $100,000</option>
+          <option value="100k-250k">$100,000 - $250,000</option>
+          <option value="250k-500k">$250,000 - $500,000</option>
+          <option value="500k+">$500,000+</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="txns">Monthly Transactions</label>
+        <select id="txns">
+          <option value="0-50">Under 50</option>
+          <option value="50-150">50 - 150</option>
+          <option value="150-300">150 - 300</option>
+          <option value="300-500">300 - 500</option>
+          <option value="500+">500+</option>
+        </select>
+      </div>
+    </div>
+    <div class="calc-row">
+      <div class="field">
+        <label for="employees">Employees / Contractors</label>
+        <select id="employees">
+          <option value="0">None (owner only)</option>
+          <option value="1-5">1 - 5</option>
+          <option value="6-15">6 - 15</option>
+          <option value="16-30">16 - 30</option>
+          <option value="30+">30+</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="complexity">Industry Complexity</label>
+        <select id="complexity">
+          <option value="low">Low (service-based, consulting)</option>
+          <option value="medium">Medium (retail, e-commerce)</option>
+          <option value="high">High (construction, manufacturing)</option>
+        </select>
+      </div>
+    </div>
+    <div class="calc-result" id="calcResult">
+      <div class="calc-result-label">Estimated Monthly Fee</div>
+      <div class="calc-result-price" id="calcPrice">$500 - $750</div>
+      <div id="calcTier"><span class="calc-result-tier tier-essential">Essential Tier</span></div>
+      <div class="calc-result-note" id="calcNote">Based on a low-complexity service business with under 50 monthly transactions. Final pricing confirmed after a free consultation.</div>
+    </div>
+  </div>
+</section>
+
+<!-- SERVICE TIERS -->
+<section class="tiers-section">
+  <div class="section-label">Service Tiers</div>
+  <div class="tiers-grid">
+
+    <!-- ESSENTIAL -->
+    <div class="tier-card essential">
+      <div class="tier-name">Essential</div>
+      <div class="tier-price">$500 - $1,000</div>
+      <div class="tier-freq">per month</div>
+      <div class="tier-ideal">Ideal for solopreneurs and small service businesses with under $50K/mo revenue and straightforward books.</div>
+      <ul class="tier-features">
+        <li class="included">Monthly bank & credit card reconciliation</li>
+        <li class="included">Transaction categorization & cleanup</li>
+        <li class="included">Monthly P&L and Balance Sheet</li>
+        <li class="included">Quarterly review call (30 min)</li>
+        <li class="included">Year-end tax-ready package</li>
+        <li>Accounts receivable management</li>
+        <li>Bill pay & vendor management</li>
+        <li>Payroll integration support</li>
+      </ul>
+      <div class="tier-cta">
+        <a href="#contact" class="tier-btn">Get Started</a>
+      </div>
+    </div>
+
+    <!-- GROWTH -->
+    <div class="tier-card growth featured">
+      <div class="tier-name">Growth</div>
+      <div class="tier-price">$1,000 - $2,500</div>
+      <div class="tier-freq">per month</div>
+      <div class="tier-ideal">For growing businesses with $50K-$250K/mo revenue, more transaction volume, and multi-entity or multi-department needs.</div>
+      <ul class="tier-features">
+        <li class="included">Everything in Essential</li>
+        <li class="included">Accounts receivable & payable management</li>
+        <li class="included">Bill pay & vendor management</li>
+        <li class="included">Payroll integration & reconciliation</li>
+        <li class="included">Monthly financial review call (60 min)</li>
+        <li class="included">Cash flow forecasting</li>
+        <li class="included">Custom class/location tracking</li>
+        <li>Controller-level oversight</li>
+      </ul>
+      <div class="tier-cta">
+        <a href="#contact" class="tier-btn">Get Started</a>
+      </div>
+    </div>
+
+    <!-- PREMIUM -->
+    <div class="tier-card premium">
+      <div class="tier-name">Premium / CFO Advisory</div>
+      <div class="tier-price">$2,500 - $5,000+</div>
+      <div class="tier-freq">per month</div>
+      <div class="tier-ideal">For established businesses with $250K+/mo revenue needing full-service bookkeeping plus fractional CFO guidance.</div>
+      <ul class="tier-features">
+        <li class="included">Everything in Growth</li>
+        <li class="included">Controller-level review & oversight</li>
+        <li class="included">Budget vs. actual variance reporting</li>
+        <li class="included">KPI dashboard & custom reporting</li>
+        <li class="included">Cash flow & revenue forecasting</li>
+        <li class="included">Board & investor-ready financials</li>
+        <li class="included">Bi-weekly CFO advisory calls</li>
+        <li class="included">Strategic tax planning coordination</li>
+      </ul>
+      <div class="tier-cta">
+        <a href="#contact" class="tier-btn">Get Started</a>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- PRICING FACTORS -->
+<section class="factors-section">
+  <div class="section-label">What Drives Your Price</div>
+  <div class="factors-grid">
+    <div class="factor-card">
+      <div class="factor-icon">&#128200;</div>
+      <div class="factor-title">Transaction Volume</div>
+      <div class="factor-desc">More transactions = more work to categorize, reconcile, and review. This is the single biggest pricing factor. Under 100 transactions/mo is simple; 300+ requires dedicated attention.</div>
+    </div>
+    <div class="factor-card">
+      <div class="factor-icon">&#127959;</div>
+      <div class="factor-title">Industry Complexity</div>
+      <div class="factor-desc">Construction (job costing), e-commerce (inventory, multi-channel), and manufacturing have more complex books than a consulting firm. Complex industries command a 20-40% premium.</div>
+    </div>
+    <div class="factor-card">
+      <div class="factor-icon">&#128101;</div>
+      <div class="factor-title">Payroll & Headcount</div>
+      <div class="factor-desc">Businesses with employees need payroll reconciliation, benefits tracking, and 1099/W-2 compliance. Each layer of HR complexity adds to the monthly scope.</div>
+    </div>
+    <div class="factor-card">
+      <div class="factor-icon">&#128218;</div>
+      <div class="factor-title">Catch-Up & Cleanup</div>
+      <div class="factor-desc">Behind on your books? Catch-up bookkeeping is typically billed as a one-time project ($500 - $5,000+) depending on how many months need reconciling.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ADD-ONS -->
+<section class="addons-section">
+  <div class="section-label">Common Add-Ons</div>
+  <table class="addons-table">
+    <thead>
+      <tr>
+        <th>Service</th>
+        <th>Description</th>
+        <th>Price</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Catch-up Bookkeeping</td>
+        <td>Reconcile & clean up past months of neglected books</td>
+        <td>$250 - $750/mo</td>
+      </tr>
+      <tr>
+        <td>Payroll Processing</td>
+        <td>Full-service payroll via Gusto, ADP, or QBO Payroll</td>
+        <td>$50 - $200/mo</td>
+      </tr>
+      <tr>
+        <td>Sales Tax Filing</td>
+        <td>Multi-state sales tax calculation and filing</td>
+        <td>$75 - $250/mo</td>
+      </tr>
+      <tr>
+        <td>1099 Preparation</td>
+        <td>Annual 1099 filing for contractors</td>
+        <td>$25/contractor</td>
+      </tr>
+      <tr>
+        <td>Entity Setup & Cleanup</td>
+        <td>Multi-entity consolidation, new QBO setup, or chart of accounts restructuring</td>
+        <td>$500 - $2,000 one-time</td>
+      </tr>
+      <tr>
+        <td>CFO Advisory Hour</td>
+        <td>Ad-hoc strategic financial advisory (for Essential/Growth clients)</td>
+        <td>$200 - $350/hr</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- CTA -->
+<section class="cta-section" id="contact">
+  <div class="cta-title">Ready to Get Your Books in Order?</div>
+  <p class="cta-sub">Book a free 30-minute consultation. We'll review your current situation, recommend the right tier, and provide a fixed monthly quote with no surprises.</p>
+  <a href="mailto:hello@clearbooksadvisory.com?subject=Bookkeeping%20Inquiry" class="cta-btn">Schedule a Consultation</a>
+</section>
+
+<footer class="footer">&copy; 2026 Clear Books Advisory. All rights reserved.</footer>
+
+<script>
+const PRICING = {
+  revenue: { '0-25k':0, '25k-50k':1, '50k-100k':2, '100k-250k':3, '250k-500k':4, '500k+':5 },
+  txns: { '0-50':0, '50-150':1, '150-300':2, '300-500':3, '500+':4 },
+  employees: { '0':0, '1-5':1, '6-15':2, '16-30':3, '30+':4 },
+  complexity: { 'low':0, 'medium':1, 'high':2 }
+};
+
+// Base pricing matrix: [min, max, tierName, tierClass]
+const TIERS = [
+  [500, 750, 'Essential Tier', 'tier-essential'],
+  [750, 1000, 'Essential Tier', 'tier-essential'],
+  [1000, 1500, 'Growth Tier', 'tier-growth'],
+  [1500, 2000, 'Growth Tier', 'tier-growth'],
+  [2000, 2500, 'Growth Tier', 'tier-growth'],
+  [2500, 3500, 'Premium Tier', 'tier-premium'],
+  [3500, 5000, 'Premium Tier', 'tier-premium'],
+  [5000, 7500, 'Premium Tier', 'tier-premium']
+];
+
+function calculate() {
+  const r = PRICING.revenue[document.getElementById('revenue').value];
+  const t = PRICING.txns[document.getElementById('txns').value];
+  const e = PRICING.employees[document.getElementById('employees').value];
+  const c = PRICING.complexity[document.getElementById('complexity').value];
+
+  // Weighted score: revenue and txns matter most
+  const score = Math.round(r * 1.5 + t * 2 + e * 1.2 + c * 1.3);
+  const idx = Math.min(score, TIERS.length - 1);
+  const tier = TIERS[idx];
+
+  document.getElementById('calcPrice').textContent = '$' + tier[0].toLocaleString() + ' - $' + tier[1].toLocaleString();
+  document.getElementById('calcTier').innerHTML = '<span class="calc-result-tier ' + tier[3] + '">' + tier[2] + '</span>';
+
+  const notes = {
+    'tier-essential': 'Covers monthly reconciliation, categorization, and standard financial statements. Final pricing confirmed after a free consultation.',
+    'tier-growth': 'Includes AR/AP management, payroll reconciliation, and monthly advisory calls. Final pricing confirmed after a free consultation.',
+    'tier-premium': 'Full-service bookkeeping with CFO advisory, forecasting, and custom reporting. Final pricing confirmed after a free consultation.'
+  };
+  document.getElementById('calcNote').textContent = notes[tier[3]];
+}
+
+document.getElementById('revenue').addEventListener('change', calculate);
+document.getElementById('txns').addEventListener('change', calculate);
+document.getElementById('employees').addEventListener('change', calculate);
+document.getElementById('complexity').addEventListener('change', calculate);
+</script>
+</body>
+</html>
