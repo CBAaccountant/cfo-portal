@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Clear Books Advisory | Pricing Model</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --blue-dark: #5c4fd6;
+  --blue: #7c6ef5;
+  --blue-light: #a89cf7;
+  --green: #00b894;
+  --red: #e17055;
+  --gold: #e67e22;
+  --text-primary: #1a1d2e;
+  --text-secondary: #4a5568;
+  --text-muted: #a0aec0;
+  --border: rgba(0,0,0,0.07);
+  --border-strong: rgba(0,0,0,0.13);
+  --card-bg: #ffffff;
+  --bg: #f0f1f5;
+  --shadow: 0 1px 12px rgba(0,0,0,0.08);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text-primary);min-height:100vh;font-size:14px}
+
+/* HEADER */
+header{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;background:#fff;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;box-shadow:0 1px 8px rgba(0,0,0,.06)}
+.hbrand{font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:700;letter-spacing:.06em}
+.hbrand span{color:var(--blue)}
+.hbadge{font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--text-muted);margin-top:2px}
+.hright{display:flex;align-items:center;gap:12px}
+.hbtn{padding:7px 16px;border-radius:7px;font-family:'Outfit',sans-serif;font-size:.75rem;font-weight:500;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;transition:all .2s;border:1px solid var(--border-strong);background:transparent;color:var(--text-secondary);text-decoration:none}
+.hbtn:hover{border-color:var(--blue);color:var(--blue)}
+
+main{padding:28px 32px;display:flex;flex-direction:column;gap:24px;max-width:1200px;margin:0 auto;width:100%}
+.page-title{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:700}
+.page-title span{color:var(--blue)}
+.page-sub{font-size:.85rem;color:var(--text-secondary);margin-top:4px;line-height:1.6}
+
+/* SECTION */
+.section-label{font-size:.68rem;letter-spacing:.15em;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px;font-weight:500}
+.card{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:24px 28px;box-shadow:var(--shadow)}
+.card-title{font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:600;margin-bottom:16px}
+
+/* KPI ROW */
+.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:24px}
+@media(max-width:900px){.kpi-row{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:16px 18px;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--ac,var(--blue))}
+.kpi-label{font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);font-weight:500;margin-bottom:6px}
+.kpi-val{font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:700;line-height:1.1}
+.kpi-note{font-size:.7rem;color:var(--text-muted);margin-top:4px}
+.kpi.green::before{background:var(--green)}.kpi.green .kpi-val{color:var(--green)}
+.kpi.red::before{background:var(--red)}.kpi.red .kpi-val{color:var(--red)}
+.kpi.gold::before{background:var(--gold)}.kpi.gold .kpi-val{color:var(--gold)}
+.kpi.blue::before{background:var(--blue)}
+
+/* INPUTS */
+.input-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:800px){.input-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:500px){.input-grid{grid-template-columns:1fr}}
+.field{margin-bottom:0}
+.field label{display:block;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:5px;font-weight:500}
+.field input,.field select{width:100%;background:#f7f8fa;border:1px solid var(--border-strong);color:var(--text-primary);font-family:'Outfit',sans-serif;font-size:.85rem;padding:9px 12px;border-radius:8px;outline:none;transition:border .2s}
+.field input:focus,.field select:focus{border-color:var(--blue)}
+.field .hint{font-size:.68rem;color:var(--text-muted);margin-top:3px}
+
+/* TABLES */
+.model-table{width:100%;border-collapse:collapse;margin-top:12px}
+.model-table th{text-align:left;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);font-weight:500;padding:10px 14px;border-bottom:2px solid var(--border-strong);background:#f7f8fa}
+.model-table th.right,.model-table td.right{text-align:right}
+.model-table td{padding:10px 14px;font-size:.84rem;color:var(--text-secondary);border-bottom:1px solid var(--border)}
+.model-table tr:last-child td{border-bottom:none}
+.model-table tr.total td{font-weight:600;color:var(--text-primary);border-top:2px solid var(--border-strong);background:#f7f8fa}
+.model-table tr.subtotal td{font-weight:500;color:var(--text-primary);background:#fafafa}
+.model-table .pos{color:var(--green)}.model-table .neg{color:var(--red)}.model-table .warn{color:var(--gold)}
+
+/* SCENARIO TABS */
+.scenario-tabs{display:flex;gap:8px;margin-bottom:16px}
+.stab{padding:7px 16px;border-radius:7px;font-family:'Outfit',sans-serif;font-size:.75rem;font-weight:500;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;transition:all .2s;border:1px solid var(--border-strong);background:transparent;color:var(--text-secondary)}
+.stab:hover{border-color:var(--blue);color:var(--blue)}
+.stab.active{background:var(--blue);border-color:var(--blue);color:#fff}
+
+/* BAR CHART */
+.bar-group{display:flex;align-items:flex-end;gap:12px;height:180px;padding:16px 0;margin-top:12px}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px}
+.bar{width:100%;border-radius:6px 6px 0 0;transition:height .4s ease;position:relative;min-height:2px}
+.bar-val{font-size:.72rem;font-weight:600;color:var(--text-primary)}
+.bar-label{font-size:.65rem;color:var(--text-muted);text-align:center;letter-spacing:.04em}
+.bar.revenue{background:var(--blue-light)}
+.bar.cost{background:var(--red);opacity:.6}
+.bar.profit{background:var(--green)}
+
+/* WATERFALL */
+.waterfall{margin-top:16px}
+.wf-row{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.wf-label{width:180px;font-size:.78rem;color:var(--text-secondary);flex-shrink:0}
+.wf-bar-wrap{flex:1;height:24px;background:#f0f1f5;border-radius:6px;overflow:hidden;position:relative}
+.wf-bar{height:100%;border-radius:6px;transition:width .4s ease;display:flex;align-items:center;justify-content:flex-end;padding:0 8px;font-size:.7rem;font-weight:600;color:#fff;min-width:fit-content}
+.wf-bar.blue{background:var(--blue-light)}
+.wf-bar.red{background:var(--red);opacity:.7}
+.wf-bar.green{background:var(--green)}
+.wf-bar.gold{background:var(--gold)}
+.wf-amount{width:100px;text-align:right;font-size:.82rem;font-weight:600;color:var(--text-primary);flex-shrink:0}
+
+/* TWO COL */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:800px){.two-col{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="hbrand">Clear<span>Books</span></div>
+    <div class="hbadge">Pricing Model</div>
+  </div>
+  <div class="hright">
+    <a href="/services.html" class="hbtn">Public Pricing</a>
+    <a href="/admin.html" class="hbtn">Admin</a>
+  </div>
+</header>
+
+<main>
+  <div>
+    <div class="page-title">Bookkeeping Service <span>Pricing Model</span></div>
+    <div class="page-sub">Change any input below and the entire model recalculates instantly. Use this to find the right price point for each tier based on your actual cost structure.</div>
+  </div>
+
+  <!-- ════════ SECTION 1: COST STRUCTURE ════════ -->
+  <section>
+    <div class="section-label">1. Cost Structure Inputs</div>
+    <div class="card">
+      <div class="card-title">Team & Overhead</div>
+      <div class="input-grid">
+        <div class="field">
+          <label>Owner Salary (Annual)</label>
+          <input type="number" id="ownerSalary" value="90000" step="5000"/>
+          <div class="hint">Your target draw / salary</div>
+        </div>
+        <div class="field">
+          <label>Number of Bookkeepers</label>
+          <input type="number" id="numBookkeepers" value="2" min="0" max="20" step="1"/>
+        </div>
+        <div class="field">
+          <label>Avg Bookkeeper Salary</label>
+          <input type="number" id="bkSalary" value="55000" step="1000"/>
+        </div>
+        <div class="field">
+          <label>Payroll Burden %</label>
+          <input type="number" id="burden" value="20" min="0" max="50" step="1"/>
+          <div class="hint">FICA, benefits, insurance</div>
+        </div>
+        <div class="field">
+          <label>Software & Tools (Monthly)</label>
+          <input type="number" id="software" value="500" step="50"/>
+          <div class="hint">QBO, Gusto, Dext, Slack, etc.</div>
+        </div>
+        <div class="field">
+          <label>Other Overhead (Monthly)</label>
+          <input type="number" id="overhead" value="800" step="50"/>
+          <div class="hint">Insurance, office, marketing</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- KPI SUMMARY -->
+  <div class="kpi-row" id="costKpis"></div>
+
+  <!-- COST WATERFALL -->
+  <section>
+    <div class="card">
+      <div class="card-title">Annual Cost Breakdown</div>
+      <div class="waterfall" id="costWaterfall"></div>
+    </div>
+  </section>
+
+  <!-- ════════ SECTION 2: CAPACITY & UTILIZATION ════════ -->
+  <section>
+    <div class="section-label">2. Capacity & Utilization</div>
+    <div class="card">
+      <div class="card-title">How Many Clients Can You Serve?</div>
+      <div class="input-grid">
+        <div class="field">
+          <label>Hours Per Week (Per BK)</label>
+          <input type="number" id="hoursWeek" value="40" min="10" max="60" step="1"/>
+        </div>
+        <div class="field">
+          <label>Billable Utilization %</label>
+          <input type="number" id="utilization" value="75" min="30" max="95" step="1"/>
+          <div class="hint">% of time spent on client work</div>
+        </div>
+        <div class="field">
+          <label>Avg Hours / Client / Month</label>
+          <input type="number" id="hoursPerClient" value="10" min="1" max="60" step="0.5"/>
+        </div>
+        <div class="field">
+          <label>Owner Billable Hours/Wk</label>
+          <input type="number" id="ownerHours" value="15" min="0" max="40" step="1"/>
+          <div class="hint">Client work (not admin/sales)</div>
+        </div>
+        <div class="field">
+          <label>Weeks Per Year</label>
+          <input type="number" id="weeksYear" value="48" min="40" max="52" step="1"/>
+          <div class="hint">After PTO & holidays</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="kpi-row" id="capacityKpis"></div>
+
+  <!-- ════════ SECTION 3: PRICING & CLIENT MIX ════════ -->
+  <section>
+    <div class="section-label">3. Pricing & Client Mix</div>
+    <div class="card">
+      <div class="card-title">Set Your Tier Prices & Client Count</div>
+      <div class="input-grid">
+        <div class="field">
+          <label>Essential Price (Monthly)</label>
+          <input type="number" id="priceEssential" value="650" step="25"/>
+        </div>
+        <div class="field">
+          <label>Growth Price (Monthly)</label>
+          <input type="number" id="priceGrowth" value="1500" step="25"/>
+        </div>
+        <div class="field">
+          <label>Premium Price (Monthly)</label>
+          <input type="number" id="pricePremium" value="3000" step="100"/>
+        </div>
+        <div class="field">
+          <label>Essential Clients</label>
+          <input type="number" id="countEssential" value="12" min="0" step="1"/>
+        </div>
+        <div class="field">
+          <label>Growth Clients</label>
+          <input type="number" id="countGrowth" value="6" min="0" step="1"/>
+        </div>
+        <div class="field">
+          <label>Premium Clients</label>
+          <input type="number" id="countPremium" value="2" min="0" step="1"/>
+        </div>
+        <div class="field">
+          <label>Avg Hrs: Essential Client</label>
+          <input type="number" id="hrsEssential" value="6" min="1" max="40" step="0.5"/>
+        </div>
+        <div class="field">
+          <label>Avg Hrs: Growth Client</label>
+          <input type="number" id="hrsGrowth" value="12" min="1" max="60" step="0.5"/>
+        </div>
+        <div class="field">
+          <label>Avg Hrs: Premium Client</label>
+          <input type="number" id="hrsPremium" value="22" min="1" max="80" step="0.5"/>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ SECTION 4: P&L MODEL ════════ -->
+  <section>
+    <div class="section-label">4. Projected P&L</div>
+    <div class="card">
+      <div class="card-title">Annual Profit & Loss</div>
+      <table class="model-table" id="pnlTable">
+        <thead><tr><th>Line Item</th><th class="right">Monthly</th><th class="right">Annual</th><th class="right">% of Revenue</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ════════ SECTION 5: TIER ECONOMICS ════════ -->
+  <section>
+    <div class="section-label">5. Per-Tier Economics</div>
+    <div class="card">
+      <div class="card-title">Revenue, Effective Rate & Margin by Tier</div>
+      <table class="model-table" id="tierTable">
+        <thead><tr><th>Metric</th><th class="right">Essential</th><th class="right">Growth</th><th class="right">Premium</th><th class="right">Blended</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ════════ SCENARIO COMPARISON ════════ -->
+  <section>
+    <div class="section-label">6. Scenario Comparison</div>
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title">Revenue vs Cost vs Profit</div>
+        <div class="bar-group" id="scenarioBars"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">What-If: Price Sensitivity</div>
+        <div style="margin-bottom:12px">
+          <div class="field">
+            <label>Adjust All Prices By %</label>
+            <input type="range" id="priceAdjust" min="-30" max="50" value="0" style="width:100%;accent-color:var(--blue)"/>
+            <div style="display:flex;justify-content:space-between;font-size:.7rem;color:var(--text-muted)">
+              <span>-30%</span><span id="adjustLabel">0%</span><span>+50%</span>
+            </div>
+          </div>
+        </div>
+        <table class="model-table" id="sensitivityTable">
+          <thead><tr><th>Metric</th><th class="right">Current</th><th class="right">Adjusted</th><th class="right">Delta</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ BREAK-EVEN ════════ -->
+  <section>
+    <div class="section-label">7. Break-Even Analysis</div>
+    <div class="card">
+      <div class="card-title">Minimum Clients to Cover Costs</div>
+      <table class="model-table" id="breakevenTable">
+        <thead><tr><th>Scenario</th><th class="right">Avg Monthly/Client</th><th class="right">Monthly Costs</th><th class="right">Clients Needed</th><th class="right">Your Current</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+
+<script>
+// ── Helpers ──
+const $ = id => document.getElementById(id);
+const num = id => parseFloat($(id).value) || 0;
+const fmt = n => '$' + Math.round(n).toLocaleString();
+const pct = n => (n * 100).toFixed(1) + '%';
+
+// ── Recalculate everything ──
+function recalc() {
+  // 1. COSTS
+  const ownerSalary = num('ownerSalary');
+  const numBK = num('numBookkeepers');
+  const bkSalary = num('bkSalary');
+  const burden = num('burden') / 100;
+  const softwareM = num('software');
+  const overheadM = num('overhead');
+
+  const ownerTotal = ownerSalary * (1 + burden);
+  const bkTotal = numBK * bkSalary * (1 + burden);
+  const laborTotal = ownerTotal + bkTotal;
+  const softwareA = softwareM * 12;
+  const overheadA = overheadM * 12;
+  const totalCostA = laborTotal + softwareA + overheadA;
+  const totalCostM = totalCostA / 12;
+
+  // Cost KPIs
+  $('costKpis').innerHTML = [
+    kpi('Owner All-In', fmt(ownerTotal) + '/yr', fmt(Math.round(ownerTotal/12)) + '/mo', 'blue'),
+    kpi('Staff All-In', fmt(bkTotal) + '/yr', numBK + ' bookkeeper' + (numBK !== 1 ? 's' : ''), 'blue'),
+    kpi('Total Labor', fmt(laborTotal) + '/yr', pct(laborTotal/totalCostA) + ' of costs', ''),
+    kpi('Overhead', fmt(softwareA + overheadA) + '/yr', fmt(softwareM + overheadM) + '/mo', ''),
+    kpi('Total Costs', fmt(totalCostA) + '/yr', fmt(totalCostM) + '/mo', 'red'),
+  ].join('');
+
+  // Cost waterfall
+  const maxCost = totalCostA;
+  $('costWaterfall').innerHTML = [
+    wfRow('Owner (salary + burden)', ownerTotal, maxCost, 'blue'),
+    wfRow('Bookkeepers (all-in)', bkTotal, maxCost, 'blue'),
+    wfRow('Software & tools', softwareA, maxCost, 'gold'),
+    wfRow('Other overhead', overheadA, maxCost, 'gold'),
+    wfRow('Total Annual Cost', totalCostA, maxCost, 'red'),
+  ].join('');
+
+  // 2. CAPACITY
+  const hoursWeek = num('hoursWeek');
+  const util = num('utilization') / 100;
+  const hrsPerClient = num('hoursPerClient');
+  const ownerBillHrs = num('ownerHours');
+  const weeksYr = num('weeksYear');
+
+  const bkBillableHrsM = numBK * hoursWeek * util * weeksYr / 12;
+  const ownerBillableHrsM = ownerBillHrs * weeksYr / 12;
+  const totalBillableHrsM = bkBillableHrsM + ownerBillableHrsM;
+  const maxClients = Math.floor(totalBillableHrsM / hrsPerClient);
+  const costPerHour = totalCostM / totalBillableHrsM;
+
+  $('capacityKpis').innerHTML = [
+    kpi('BK Billable Hrs/Mo', Math.round(bkBillableHrsM), numBK + ' staff x ' + Math.round(hoursWeek*util*weeksYr/12) + ' hrs', 'blue'),
+    kpi('Owner Billable Hrs/Mo', Math.round(ownerBillableHrsM), '', 'blue'),
+    kpi('Total Billable Hrs/Mo', Math.round(totalBillableHrsM), '', 'blue'),
+    kpi('Max Clients (Avg)', maxClients, 'at ' + hrsPerClient + ' hrs/client', 'green'),
+    kpi('Fully-Loaded Cost/Hr', fmt(costPerHour), 'all costs included', 'gold'),
+  ].join('');
+
+  // 3. PRICING
+  const priceE = num('priceEssential'), priceG = num('priceGrowth'), priceP = num('pricePremium');
+  const countE = num('countEssential'), countG = num('countGrowth'), countP = num('countPremium');
+  const hrsE = num('hrsEssential'), hrsG = num('hrsGrowth'), hrsP = num('hrsPremium');
+  const totalClients = countE + countG + countP;
+
+  const revEM = countE * priceE;
+  const revGM = countG * priceG;
+  const revPM = countP * priceP;
+  const totalRevM = revEM + revGM + revPM;
+  const totalRevA = totalRevM * 12;
+
+  const hrsUsedM = countE * hrsE + countG * hrsG + countP * hrsP;
+  const utilActual = totalBillableHrsM > 0 ? hrsUsedM / totalBillableHrsM : 0;
+
+  // 4. P&L
+  const grossProfit = totalRevM - totalCostM;
+  const margin = totalRevM > 0 ? grossProfit / totalRevM : 0;
+
+  const pnlRows = [
+    ['Revenue — Essential', revEM, revEM*12, revEM/totalRevM],
+    ['Revenue — Growth', revGM, revGM*12, revGM/totalRevM],
+    ['Revenue — Premium', revPM, revPM*12, revPM/totalRevM],
+    ['total', 'Total Revenue', totalRevM, totalRevA, 1],
+    ['sep'],
+    ['Owner Compensation', -ownerTotal/12, -ownerTotal, ownerTotal/12/totalRevM],
+    ['Staff Compensation', -bkTotal/12, -bkTotal, bkTotal/12/totalRevM],
+    ['Software & Tools', -softwareM, -softwareA, softwareM/totalRevM],
+    ['Other Overhead', -overheadM, -overheadA, overheadM/totalRevM],
+    ['total', 'Total Costs', -totalCostM, -totalCostA, totalCostM/totalRevM],
+    ['sep'],
+    ['total', 'Net Profit', grossProfit, grossProfit*12, margin],
+  ];
+
+  let pnlHtml = '';
+  for (const r of pnlRows) {
+    if (r[0] === 'sep') { pnlHtml += '<tr><td colspan="4" style="padding:4px;border:none"></td></tr>'; continue; }
+    if (r[0] === 'total') {
+      const cls = r[3] >= 0 ? (r[3] > 0 ? 'pos' : '') : 'neg';
+      pnlHtml += `<tr class="total"><td>${r[1]}</td><td class="right ${cls}">${fmt(r[2])}</td><td class="right ${cls}">${fmt(r[3])}</td><td class="right">${pct(Math.abs(r[4]))}</td></tr>`;
+    } else {
+      const cls = r[1] < 0 ? 'neg' : '';
+      pnlHtml += `<tr><td>${r[0]}</td><td class="right ${cls}">${fmt(Math.abs(r[1]))}</td><td class="right ${cls}">${fmt(Math.abs(r[2]))}</td><td class="right">${pct(Math.abs(r[3]))}</td></tr>`;
+    }
+  }
+  $('pnlTable').querySelector('tbody').innerHTML = pnlHtml;
+
+  // 5. TIER ECONOMICS
+  const effRateE = hrsE > 0 ? priceE / hrsE : 0;
+  const effRateG = hrsG > 0 ? priceG / hrsG : 0;
+  const effRateP = hrsP > 0 ? priceP / hrsP : 0;
+  const effRateBlend = hrsUsedM > 0 ? totalRevM / hrsUsedM : 0;
+  const marginE = hrsE > 0 ? (priceE - costPerHour * hrsE) / priceE : 0;
+  const marginG = hrsG > 0 ? (priceG - costPerHour * hrsG) / priceG : 0;
+  const marginP = hrsP > 0 ? (priceP - costPerHour * hrsP) / priceP : 0;
+
+  const tierRows = [
+    ['Monthly Price', fmt(priceE), fmt(priceG), fmt(priceP), fmt(totalRevM / (totalClients || 1))],
+    ['Hours / Client / Mo', hrsE, hrsG, hrsP, (hrsUsedM / (totalClients || 1)).toFixed(1)],
+    ['Effective Rate / Hr', fmt(effRateE), fmt(effRateG), fmt(effRateP), fmt(effRateBlend)],
+    ['Cost / Hr (Loaded)', fmt(costPerHour), fmt(costPerHour), fmt(costPerHour), fmt(costPerHour)],
+    ['Gross Margin %', mcls(marginE), mcls(marginG), mcls(marginP), mcls(margin)],
+    ['Clients', countE, countG, countP, totalClients],
+    ['Monthly Revenue', fmt(revEM), fmt(revGM), fmt(revPM), fmt(totalRevM)],
+    ['Hours Used / Mo', Math.round(countE*hrsE), Math.round(countG*hrsG), Math.round(countP*hrsP), Math.round(hrsUsedM)],
+  ];
+
+  let tierHtml = '';
+  for (const r of tierRows) {
+    tierHtml += `<tr><td>${r[0]}</td><td class="right">${typeof r[1]==='object'?r[1].h:r[1]}</td><td class="right">${typeof r[2]==='object'?r[2].h:r[2]}</td><td class="right">${typeof r[3]==='object'?r[3].h:r[3]}</td><td class="right" style="font-weight:600">${typeof r[4]==='object'?r[4].h:r[4]}</td></tr>`;
+  }
+  $('tierTable').querySelector('tbody').innerHTML = tierHtml;
+
+  // 6. SCENARIO BARS
+  const barMax = Math.max(totalRevA, totalCostA, 1);
+  $('scenarioBars').innerHTML = [
+    barCol('Revenue', totalRevA, barMax, 'revenue'),
+    barCol('Costs', totalCostA, barMax, 'cost'),
+    barCol('Profit', grossProfit * 12, barMax, 'profit'),
+    barCol('Capacity Used', null, null, null, pct(utilActual)),
+    barCol('Margin', null, null, null, pct(margin)),
+  ].join('');
+
+  // Sensitivity
+  const adj = num('priceAdjust') / 100;
+  $('adjustLabel').textContent = (adj >= 0 ? '+' : '') + (adj * 100).toFixed(0) + '%';
+  const adjRevM = totalRevM * (1 + adj);
+  const adjProfit = adjRevM - totalCostM;
+  const adjMargin = adjRevM > 0 ? adjProfit / adjRevM : 0;
+  const sensRows = [
+    ['Monthly Revenue', fmt(totalRevM), fmt(adjRevM), fmtDelta((adjRevM - totalRevM))],
+    ['Annual Revenue', fmt(totalRevA), fmt(adjRevM * 12), fmtDelta((adjRevM - totalRevM) * 12)],
+    ['Monthly Profit', fmt(grossProfit), fmt(adjProfit), fmtDelta(adjProfit - grossProfit)],
+    ['Net Margin', pct(margin), pct(adjMargin), fmtDeltaPct(adjMargin - margin)],
+  ];
+  let sensHtml = '';
+  for (const r of sensRows) {
+    sensHtml += `<tr><td>${r[0]}</td><td class="right">${r[1]}</td><td class="right">${r[2]}</td><td class="right">${r[3]}</td></tr>`;
+  }
+  $('sensitivityTable').querySelector('tbody').innerHTML = sensHtml;
+
+  // 7. BREAK-EVEN
+  const avgPriceM = totalClients > 0 ? totalRevM / totalClients : 0;
+  const beAll = avgPriceM > 0 ? Math.ceil(totalCostM / avgPriceM) : '—';
+  const beEssential = priceE > 0 ? Math.ceil(totalCostM / priceE) : '—';
+  const beGrowth = priceG > 0 ? Math.ceil(totalCostM / priceG) : '—';
+  const bePremium = priceP > 0 ? Math.ceil(totalCostM / priceP) : '—';
+
+  const beRows = [
+    ['Current Mix (blended)', fmt(avgPriceM), fmt(totalCostM), beAll, totalClients],
+    ['All Essential', fmt(priceE), fmt(totalCostM), beEssential, countE],
+    ['All Growth', fmt(priceG), fmt(totalCostM), beGrowth, countG],
+    ['All Premium', fmt(priceP), fmt(totalCostM), bePremium, countP],
+  ];
+  let beHtml = '';
+  for (const r of beRows) {
+    const cls = (typeof r[3] === 'number' && r[4] >= r[3]) ? 'pos' : (typeof r[3] === 'number' ? 'warn' : '');
+    beHtml += `<tr><td>${r[0]}</td><td class="right">${r[1]}</td><td class="right">${r[2]}</td><td class="right ${cls}" style="font-weight:600">${r[3]}</td><td class="right">${r[4]}</td></tr>`;
+  }
+  $('breakevenTable').querySelector('tbody').innerHTML = beHtml;
+}
+
+// ── UI Builders ──
+function kpi(label, val, note, cls) {
+  return `<div class="kpi ${cls||''}"><div class="kpi-label">${label}</div><div class="kpi-val">${val}</div>${note ? `<div class="kpi-note">${note}</div>` : ''}</div>`;
+}
+function wfRow(label, amount, max, cls) {
+  const w = max > 0 ? Math.max((amount / max) * 100, 8) : 0;
+  return `<div class="wf-row"><div class="wf-label">${label}</div><div class="wf-bar-wrap"><div class="wf-bar ${cls}" style="width:${w}%">${fmt(amount)}</div></div><div class="wf-amount">${fmt(amount)}</div></div>`;
+}
+function barCol(label, val, max, cls, override) {
+  if (override) return `<div class="bar-col"><div class="bar-val">${override}</div><div style="height:1px"></div><div class="bar-label">${label}</div></div>`;
+  const h = max > 0 ? Math.max(Math.abs(val) / max * 160, 4) : 0;
+  const c = val < 0 ? 'cost' : cls;
+  return `<div class="bar-col"><div class="bar-val">${fmt(val)}</div><div class="bar ${c}" style="height:${h}px"></div><div class="bar-label">${label}</div></div>`;
+}
+function mcls(m) {
+  const c = m >= 0.5 ? 'pos' : m >= 0.3 ? 'warn' : 'neg';
+  return { h: `<span class="${c}">${pct(m)}</span>` };
+}
+function fmtDelta(n) {
+  const cls = n >= 0 ? 'pos' : 'neg';
+  return `<span class="${cls}">${n >= 0 ? '+' : ''}${fmt(n)}</span>`;
+}
+function fmtDeltaPct(n) {
+  const cls = n >= 0 ? 'pos' : 'neg';
+  return `<span class="${cls}">${n >= 0 ? '+' : ''}${(n*100).toFixed(1)}%</span>`;
+}
+
+// ── Bind all inputs ──
+document.querySelectorAll('input, select').forEach(el => {
+  el.addEventListener('input', recalc);
+  el.addEventListener('change', recalc);
+});
+
+// Initial calc
+recalc();
+</script>
+</body>
+</html>
