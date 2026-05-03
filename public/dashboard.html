@@ -263,6 +263,14 @@ footer span{color:var(--text-secondary);font-weight:500}
 .rpt-table tr.rsp td { height: 4px; border: none; }
 .rpt-nv { color: var(--red-light) !important; }
 
+/* Investor Update tab */
+.iu-toolbar { display: flex; align-items: center; gap: 12px; padding: 16px 24px; background: #fff; border: 1px solid var(--border); border-radius: 8px; }
+.iu-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 16px 24px; background: #fff; border: 1px solid var(--border); border-radius: 8px; }
+.iu-field { display: flex; flex-direction: column; gap: 6px; }
+.iu-field textarea { font-family: 'Outfit', sans-serif; font-size: 10pt; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; resize: vertical; color: var(--text-primary); }
+.iu-field textarea:focus { outline: none; border-color: var(--blue); }
+@media print { .iu-toolbar, .iu-fields { display: none !important; } }
+
 /* Monthly P&L — compact to fit 14 columns on landscape */
 .rpt-page-pl .rpt-table { font-size: 7.5pt; }
 .rpt-page-pl .rpt-table th { padding: 5px 4px; font-size: 6.5pt; }
@@ -405,6 +413,7 @@ footer span{color:var(--text-secondary);font-weight:500}
     <button class="tab-btn" onclick="switchTab('bs',this)">🏦 Balance Sheet</button>
     <button class="tab-btn" onclick="switchTab('report',this);reportLoaded=false;loadReport()">📄 Management Report</button>
     <button class="tab-btn" onclick="switchTab('vendors',this);loadVendors()">🏢 Vendor Analysis</button>
+    <button class="tab-btn" onclick="switchTab('investor',this);loadInvestor()">📊 Investor Update</button>
   </nav>
 
   <main>
@@ -542,6 +551,26 @@ footer span{color:var(--text-secondary);font-weight:500}
           <tbody id="vendorTableBody"></tbody>
         </table>
       </div>
+    </div>
+
+    <!-- INVESTOR UPDATE TAB -->
+    <div class="tab-panel" id="tab-investor">
+      <div class="iu-toolbar">
+        <span class="plabel">Period</span>
+        <select id="iuPeriod" class="hdate" onchange="loadInvestor()"></select>
+        <button class="hbtn load" onclick="window.print()" style="margin-left:auto">🖨 Print / Save PDF</button>
+      </div>
+      <div class="iu-fields">
+        <label class="iu-field">
+          <span class="plabel">Highlights</span>
+          <textarea id="iuHighlights" rows="4" placeholder="One bullet per line — wins, lowlights, key changes this month." onblur="saveInvestor()" oninput="renderDeck()"></textarea>
+        </label>
+        <label class="iu-field">
+          <span class="plabel">Asks &amp; Next Month</span>
+          <textarea id="iuAsks" rows="4" placeholder="One bullet per line — what you need from investors and what's coming next." onblur="saveInvestor()" oninput="renderDeck()"></textarea>
+        </label>
+      </div>
+      <div class="rpt-pages" id="deckPages"></div>
     </div>
 
   </main>
@@ -1584,6 +1613,35 @@ function renderVendors(data) {
     </tr>`;
   }).join('');
 }
+
+// ── INVESTOR UPDATE ───────────────────────────────────────────────────────────
+let _iuLoadedPeriod = null;
+
+function populateInvestorPeriods() {
+  const sel = document.getElementById('iuPeriod');
+  if (sel.options.length > 0) return;
+  const now = new Date();
+  // Start from last completed month
+  let y = now.getFullYear();
+  let m = now.getMonth(); // 0-11; we want previous month, so this is already last completed (1-based math below)
+  if (m === 0) { y -= 1; m = 12; }
+  for (let i = 0; i < 12; i++) {
+    const opt = document.createElement('option');
+    opt.value = `${y}-${m}`;
+    opt.textContent = `${MONTHS[m-1]} ${y}`;
+    sel.appendChild(opt);
+    m -= 1; if (m === 0) { m = 12; y -= 1; }
+  }
+}
+
+async function loadInvestor() {
+  populateInvestorPeriods();
+  document.getElementById('deckPages').innerHTML =
+    '<div style="padding:40px;color:var(--text-muted);font-size:13px">Deck preview will render here.</div>';
+}
+
+async function saveInvestor() { /* implemented in next task */ }
+function renderDeck() { /* implemented in later tasks */ }
 
 checkStatus();
 </script>
