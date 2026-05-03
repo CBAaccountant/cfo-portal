@@ -193,7 +193,7 @@ footer span{color:var(--text-secondary);font-weight:500}
 /* Cover page */
 .rpt-cover {
   display: flex; flex-direction: column;
-  justify-content: space-between; min-height: 912px;
+  justify-content: space-between; min-height: 700px;
 }
 .rpt-cover-top { display: flex; flex-direction: column; gap: 32px; }
 .rpt-cover-logo {
@@ -263,6 +263,13 @@ footer span{color:var(--text-secondary);font-weight:500}
 .rpt-table tr.rsp td { height: 4px; border: none; }
 .rpt-nv { color: var(--red-light) !important; }
 
+/* Monthly P&L — compact to fit 14 columns on landscape */
+.rpt-page-pl .rpt-table { font-size: 7.5pt; }
+.rpt-page-pl .rpt-table th { padding: 5px 4px; font-size: 6.5pt; }
+.rpt-page-pl .rpt-table td { padding: 3px 4px; }
+.rpt-page-pl .rpt-table tr.rd td { padding-left: 12px; }
+.rpt-page-pl .rpt-table tr.rc td { font-size: 9pt; padding-top: 6px; padding-bottom: 6px; }
+
 /* Page footer */
 .rpt-page-footer {
   position: absolute; bottom: 40px; left: 80px; right: 80px;
@@ -323,6 +330,8 @@ footer span{color:var(--text-secondary);font-weight:500}
 .aging-nv { color: var(--red-light) !important; }
 
 /* @print */
+@page portrait-page { size: letter portrait; margin: 0.5in; }
+@page landscape-page { size: letter landscape; margin: 0.5in; }
 @media print {
   body { background: #fff !important; }
   #connectScreen, header, .tab-nav, footer, #lo { display: none !important; }
@@ -337,6 +346,8 @@ footer span{color:var(--text-secondary);font-weight:500}
   .rpt-page-landscape {
     width: 100%;
   }
+  .rpt-page { page: portrait-page; }
+  .rpt-page-landscape { page: landscape-page; }
 }
 
 </style>
@@ -380,9 +391,9 @@ footer span{color:var(--text-secondary);font-weight:500}
     <div class="hcontrols">
       <div class="status-connected"><span class="sdot"></span><span id="realmLabel">Connected</span></div>
       <span class="plabel">Start</span>
-      <input type="date" class="hdate" id="pnlStart"/>
+      <input type="date" class="hdate" id="pnlStart" onchange="loadAll()"/>
       <span class="plabel">End</span>
-      <input type="date" class="hdate" id="pnlEnd"/>
+      <input type="date" class="hdate" id="pnlEnd" onchange="loadAll()"/>
       <button class="hbtn load" onclick="loadAll()">↻ Load</button>
       <button class="hbtn" onclick="disconnectQbo()" id="disconnectBtn" title="Disconnect QuickBooks">⊗ QBO</button>
       <button class="hbtn" onclick="logout()">↩ Logout</button>
@@ -664,6 +675,9 @@ async function loadAll(){
   document.getElementById('lo').style.display='flex';
   try {
     await Promise.all([loadPnL(start,end), loadBS(end)]);
+    if (reportLoaded) {
+      await loadReport();
+    }
   } finally {
     document.getElementById('lo').style.display='none';
   }
@@ -1137,7 +1151,7 @@ function buildReport(plData, bsData, arData, apData, start, end) {
 
   // ── COVER PAGE ──
   const coverPage = `
-  <div class="rpt-page rpt-cover">
+  <div class="rpt-page-landscape rpt-cover">
     <div class="rpt-cover-top">
       <div>
         <div class="rpt-cover-logo">${clientCompanyName || 'Clear Books Advisory'}</div>
@@ -1264,7 +1278,7 @@ function buildReport(plData, bsData, arData, apData, start, end) {
   }
 
   const plPage = `
-  <div class="rpt-page">
+  <div class="rpt-page-landscape rpt-page-pl">
     <div class="rpt-page-header">
       <div class="rpt-page-brand">${clientCompanyName || 'Clear Books Advisory'}<small>Prepared by Clear Books Advisory</small></div>
       <div class="rpt-stmt-title">
@@ -1315,7 +1329,7 @@ function buildReport(plData, bsData, arData, apData, start, end) {
   }
 
   const bsPage = `
-  <div class="rpt-page">
+  <div class="rpt-page-landscape">
     <div class="rpt-page-header">
       <div class="rpt-page-brand">${clientCompanyName || 'Clear Books Advisory'}<small>Prepared by Clear Books Advisory</small></div>
       <div class="rpt-stmt-title">
