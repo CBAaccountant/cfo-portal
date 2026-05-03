@@ -269,7 +269,44 @@ footer span{color:var(--text-secondary);font-weight:500}
 .iu-field { display: flex; flex-direction: column; gap: 6px; }
 .iu-field textarea { font-family: 'Outfit', sans-serif; font-size: 10pt; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; resize: vertical; color: var(--text-primary); }
 .iu-field textarea:focus { outline: none; border-color: var(--blue); }
-@media print { .iu-toolbar, .iu-fields { display: none !important; } }
+
+/* Investor deck slides (16:9) */
+.deck-slide {
+  background: #fff;
+  width: 1056px;
+  min-height: 594px;
+  margin: 0 auto 24px;
+  padding: 48px 64px;
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 20px rgba(0,0,0,.08);
+  position: relative;
+  font-family: 'Outfit', sans-serif;
+  color: #1a1d2e;
+  page-break-after: always;
+  display: flex;
+  flex-direction: column;
+}
+.deck-slide.cover { justify-content: center; }
+.deck-sub { font-size: 9pt; color: var(--text-muted); letter-spacing: .14em; text-transform: uppercase; margin-bottom: 12px; }
+.deck-title { font-family: 'Cormorant Garamond', serif; font-size: 32pt; font-weight: 600; color: #1a1d2e; line-height: 1.1; margin-bottom: 4px; }
+.deck-cover-company { font-family: 'Cormorant Garamond', serif; font-size: 44pt; font-weight: 700; color: #1a1d2e; line-height: 1.05; margin-bottom: 8px; }
+.deck-cover-period { font-family: 'Cormorant Garamond', serif; font-size: 22pt; color: var(--blue); margin-top: 4px; }
+.deck-cover-footer { margin-top: auto; padding-top: 32px; font-size: 8pt; color: var(--text-muted); letter-spacing: .12em; text-transform: uppercase; border-top: 1px solid var(--border); }
+.deck-hero-stat { font-family: 'Cormorant Garamond', serif; font-size: 56pt; font-weight: 700; color: #1a1d2e; line-height: 1; }
+.deck-hero-label { font-size: 9pt; color: var(--text-muted); letter-spacing: .12em; text-transform: uppercase; margin-bottom: 6px; }
+.deck-badge { display: inline-block; padding: 5px 12px; border-radius: 4px; font-size: 9.5pt; font-weight: 600; margin-right: 8px; }
+.deck-badge.up { background: #ecfdf5; color: var(--green-light); }
+.deck-badge.down { background: #fef2f2; color: var(--red-light); }
+.deck-bullets { font-size: 13pt; line-height: 1.8; color: var(--text-primary); margin-top: 12px; }
+.deck-bullets ul { list-style: disc; padding-left: 28px; }
+.deck-placeholder { font-size: 11pt; color: var(--text-muted); font-style: italic; margin-top: 12px; }
+
+@page deck-page { size: letter landscape; margin: 0.4in; }
+@media print {
+  .iu-toolbar, .iu-fields { display: none !important; }
+  .deck-slide { page: deck-page; width: 100%; margin: 0; border: none; box-shadow: none; min-height: 7in; }
+  .deck-placeholder { display: none; }
+}
 
 /* Monthly P&L — compact to fit 14 columns on landscape */
 .rpt-page-pl .rpt-table { font-size: 7.5pt; }
@@ -1636,12 +1673,95 @@ function populateInvestorPeriods() {
 
 async function loadInvestor() {
   populateInvestorPeriods();
-  document.getElementById('deckPages').innerHTML =
-    '<div style="padding:40px;color:var(--text-muted);font-size:13px">Deck preview will render here.</div>';
+  const sel = document.getElementById('iuPeriod');
+  const newPeriod = sel.value;
+  if (_iuLoadedPeriod && _iuLoadedPeriod !== newPeriod) {
+    await saveInvestor(_iuLoadedPeriod);
+  }
+  const [year, month] = newPeriod.split('-').map(Number);
+  try {
+    const r = await fetch(`/api/investor-update?year=${year}&month=${month}`);
+    const data = r.ok ? await r.json() : { highlights_text: '', asks_text: '' };
+    document.getElementById('iuHighlights').value = data.highlights_text || '';
+    document.getElementById('iuAsks').value = data.asks_text || '';
+  } catch(e) {
+    document.getElementById('iuHighlights').value = '';
+    document.getElementById('iuAsks').value = '';
+  }
+  _iuLoadedPeriod = newPeriod;
+  renderDeck();
 }
 
-async function saveInvestor() { /* implemented in next task */ }
-function renderDeck() { /* implemented in later tasks */ }
+async function saveInvestor(periodStr) {
+  const target = periodStr || document.getElementById('iuPeriod').value;
+  if (!target) return;
+  const [year, month] = target.split('-').map(Number);
+  await fetch('/api/investor-update', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      year, month,
+      highlights_text: document.getElementById('iuHighlights').value,
+      asks_text: document.getElementById('iuAsks').value
+    })
+  });
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function buildIuPeriodLabel(year, month) {
+  const now = new Date();
+  if (now.getFullYear() === year && now.getMonth() + 1 === month) {
+    return `Month-to-date through ${MONTHS[month-1]} ${now.getDate()}, ${year}`;
+  }
+  return `${MONTHS[month-1]} ${year}`;
+}
+
+function bulletList(text) {
+  const trimmed = (text || '').trim();
+  if (!trimmed) return `<div class="deck-placeholder">Add bullets above to populate this slide.</div>`;
+  const items = trimmed.split('\n').map(l => l.trim()).filter(Boolean);
+  return `<ul>${items.map(i => `<li>${escapeHtml(i)}</li>`).join('')}</ul>`;
+}
+
+let _iuRenderToken = 0;
+async function renderDeck() {
+  if (!_iuLoadedPeriod) return;
+  const myToken = ++_iuRenderToken;
+  const [year, month] = _iuLoadedPeriod.split('-').map(Number);
+  const periodLabel = buildIuPeriodLabel(year, month);
+  const genLabel = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  const company = clientCompanyName || 'Clear Books Advisory';
+  const hl = document.getElementById('iuHighlights').value;
+  const asks = document.getElementById('iuAsks').value;
+
+  const cover = `
+    <div class="deck-slide cover">
+      <div class="deck-sub">Investor Update</div>
+      <div class="deck-cover-company">${escapeHtml(company)}</div>
+      <div class="deck-cover-period">${escapeHtml(periodLabel)}</div>
+      <div class="deck-cover-footer">Generated ${escapeHtml(genLabel)} &middot; Prepared by Clear Books Advisory</div>
+    </div>`;
+
+  const highlights = `
+    <div class="deck-slide">
+      <div class="deck-sub">${escapeHtml(periodLabel)}</div>
+      <div class="deck-title">Highlights</div>
+      <div class="deck-bullets">${bulletList(hl)}</div>
+    </div>`;
+
+  const asksSlide = `
+    <div class="deck-slide">
+      <div class="deck-sub">${escapeHtml(periodLabel)}</div>
+      <div class="deck-title">Asks &amp; Next Month</div>
+      <div class="deck-bullets">${bulletList(asks)}</div>
+    </div>`;
+
+  if (myToken !== _iuRenderToken) return;
+  document.getElementById('deckPages').innerHTML = cover + highlights + asksSlide;
+}
 
 checkStatus();
 </script>
