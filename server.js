@@ -347,56 +347,6 @@ app.get('/api/vendor-spend', requireAuth, async (req, res) => {
   }
 });
 
-// ── Investor Update Routes ───────────────────────────────────────────────────
-
-app.get('/api/investor-update', requireAuth, async (req, res) => {
-  const userId = getTargetUserId(req);
-  const year   = parseInt(req.query.year, 10);
-  const month  = parseInt(req.query.month, 10);
-  if (!Number.isInteger(year) || !Number.isInteger(month) || month < 1 || month > 12) {
-    return res.status(400).json({ error: 'Invalid year or month' });
-  }
-  try {
-    const result = await db.pool.query(
-      'SELECT highlights_text, asks_text, updated_at FROM investor_updates WHERE user_id = $1 AND period_year = $2 AND period_month = $3',
-      [userId, year, month]
-    );
-    if (result.rows.length === 0) {
-      return res.json({ highlights_text: '', asks_text: '', updated_at: null });
-    }
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error('investor-update GET error:', err.message);
-    res.status(500).json({ error: 'Database error' });
-  }
-});
-
-app.post('/api/investor-update', requireAuth, async (req, res) => {
-  const userId = getTargetUserId(req);
-  const { year, month, highlights_text, asks_text } = req.body || {};
-  if (!Number.isInteger(year) || !Number.isInteger(month) || month < 1 || month > 12) {
-    return res.status(400).json({ error: 'Invalid year or month' });
-  }
-  const h = (highlights_text || '').toString();
-  const a = (asks_text || '').toString();
-  try {
-    const result = await db.pool.query(
-      `INSERT INTO investor_updates (user_id, period_year, period_month, highlights_text, asks_text, updated_at)
-       VALUES ($1, $2, $3, $4, $5, NOW())
-       ON CONFLICT (user_id, period_year, period_month)
-       DO UPDATE SET highlights_text = EXCLUDED.highlights_text,
-                     asks_text       = EXCLUDED.asks_text,
-                     updated_at      = NOW()
-       RETURNING updated_at`,
-      [userId, year, month, h, a]
-    );
-    res.json({ ok: true, updated_at: result.rows[0].updated_at });
-  } catch (err) {
-    console.error('investor-update POST error:', err.message);
-    res.status(500).json({ error: 'Database error' });
-  }
-});
-
 // ── Admin Routes ──────────────────────────────────────────────────────────────
 
 // List all clients
