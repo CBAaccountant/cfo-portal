@@ -47,9 +47,21 @@ async function initDB() {
         expire TIMESTAMP(6) NOT NULL,
         CONSTRAINT session_pkey PRIMARY KEY (sid) NOT DEFERRABLE INITIALLY IMMEDIATE
       );
+      CREATE TABLE IF NOT EXISTS investor_updates (
+        id              SERIAL PRIMARY KEY,
+        user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        period_year     INTEGER NOT NULL,
+        period_month    INTEGER NOT NULL CHECK (period_month BETWEEN 1 AND 12),
+        highlights_text TEXT NOT NULL DEFAULT '',
+        asks_text       TEXT NOT NULL DEFAULT '',
+        updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        UNIQUE (user_id, period_year, period_month)
+      );
       CREATE INDEX IF NOT EXISTS idx_session_expire ON session (expire);
       CREATE INDEX IF NOT EXISTS idx_users_email ON users (email);
       CREATE INDEX IF NOT EXISTS idx_qbo_user_id ON qbo_connections (user_id);
+      CREATE INDEX IF NOT EXISTS idx_investor_updates_user_period
+        ON investor_updates (user_id, period_year DESC, period_month DESC);
     `);
     console.log('Database tables initialized.');
     // Seed admin account if env vars provided and admin doesn't exist
