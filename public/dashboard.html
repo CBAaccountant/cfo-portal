@@ -350,6 +350,70 @@ footer span{color:var(--text-secondary);font-weight:500}
   .rpt-page-landscape { page: landscape-page; }
 }
 
+/* ── BANK REC ─────────────────────────────────────────────── */
+.rec-layout { display: grid; grid-template-columns: 240px 1fr; gap: 16px; }
+.rec-history { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 14px; min-height: 200px; }
+.rec-history h3 { font-family: 'Cormorant Garamond', serif; font-size: 1rem; font-weight: 600; margin-bottom: 8px; }
+.rec-new-btn { width: 100%; padding: 8px 12px; background: linear-gradient(135deg, var(--blue), var(--blue-dark)); color: white; border: none; border-radius: 8px; font-family: inherit; font-size: .78rem; font-weight: 500; cursor: pointer; margin-bottom: 12px; }
+.rec-new-btn:hover { box-shadow: 0 4px 12px rgba(124,110,245,.3); }
+.rec-history-list { display: flex; flex-direction: column; gap: 6px; }
+.rec-history-item { padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; transition: all .15s; }
+.rec-history-item:hover { border-color: var(--blue-light); background: rgba(124,110,245,.03); }
+.rec-history-item.active { border-color: var(--blue); background: rgba(124,110,245,.08); }
+.rec-history-item .period { font-weight: 600; font-size: .82rem; color: var(--text-primary); }
+.rec-history-item .meta { font-size: .68rem; color: var(--text-muted); margin-top: 2px; }
+.rec-history-item.finalized .badge { display: inline-block; background: var(--green-light); color: white; font-size: .6rem; padding: 1px 6px; border-radius: 8px; margin-left: 4px; font-weight: 600; }
+.rec-history-item.in_progress .badge { display: inline-block; background: var(--gold-light); color: white; font-size: .6rem; padding: 1px 6px; border-radius: 8px; margin-left: 4px; font-weight: 600; }
+.rec-active { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; }
+.rec-empty { padding: 60px 20px; text-align: center; color: var(--text-muted); font-size: .9rem; }
+.rec-setup { padding: 18px 22px; border-bottom: 1px solid var(--border); }
+.rec-setup-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 10px; align-items: end; margin-top: 8px; }
+.rec-field label { display: block; font-size: .6rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-muted); font-weight: 600; margin-bottom: 4px; }
+.rec-field input, .rec-field select { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; font-size: .82rem; box-sizing: border-box; }
+.rec-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; padding: 14px 22px; background: #fafbfc; border-bottom: 1px solid var(--border); }
+.rec-stat { text-align: center; }
+.rec-stat .lbl { font-size: .58rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-muted); font-weight: 600; }
+.rec-stat .val { font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; font-weight: 600; margin-top: 2px; color: var(--text-primary); }
+.rec-stat .val.green { color: var(--green-light); }
+.rec-stat .val.red { color: var(--red-light); }
+.rec-stat .val.gold { color: var(--gold-light); }
+.rec-table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+.rec-table thead th { padding: 9px 14px; text-align: left; font-size: .62rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-muted); font-weight: 600; border-bottom: 1px solid var(--border); background: #fafbfc; }
+.rec-table thead th.right { text-align: right; }
+.rec-table thead th.center { text-align: center; }
+.rec-table tbody td { padding: 8px 14px; border-bottom: 1px solid rgba(0,0,0,.04); vertical-align: middle; }
+.rec-table tbody td.right { text-align: right; font-variant-numeric: tabular-nums; font-weight: 500; }
+.rec-table tbody td.center { text-align: center; }
+.rec-table tbody td.neg { color: var(--red-light); }
+.rec-table tbody td.pos { color: var(--green-light); }
+.rec-table tbody tr:hover { background: rgba(124,110,245,.02); }
+.rec-table tbody tr.cleared { background: rgba(0,184,148,.04); }
+.rec-table tbody tr.cleared:hover { background: rgba(0,184,148,.08); }
+.rec-table tbody tr.cleared td { color: var(--text-secondary); }
+.rec-bar { padding: 14px 22px; border-top: 1px solid var(--border); background: #fafbfc; display: flex; justify-content: space-between; align-items: center; gap: 12px; border-radius: 0 0 12px 12px; }
+.rec-bar .summary { font-size: .82rem; color: var(--text-secondary); }
+.rec-bar .summary strong { color: var(--text-primary); font-weight: 600; }
+.rec-bar .summary.balanced { color: var(--green-light); font-weight: 600; }
+.rec-bar .summary.unbalanced { color: var(--red-light); font-weight: 600; }
+.rec-actions { display: flex; gap: 8px; }
+.rec-pill { padding: 4px 10px; border-radius: 12px; font-size: .65rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+.rec-pill.expense { background: rgba(225,112,85,.12); color: var(--red-light); }
+.rec-pill.check { background: rgba(124,110,245,.12); color: var(--blue-dark); }
+.rec-pill.deposit { background: rgba(0,184,148,.12); color: var(--green-light); }
+.rec-pill.cccharge { background: rgba(230,126,34,.12); color: var(--gold-light); }
+.rec-checkbox { width: 16px; height: 16px; cursor: pointer; }
+.cat-btn { padding: 8px 14px; background: white; border: 1px solid var(--border-strong); color: var(--text-secondary); border-radius: 8px; font-family: inherit; font-size: .78rem; font-weight: 500; cursor: pointer; transition: all .15s; }
+.cat-btn:hover { border-color: var(--blue); color: var(--blue); }
+.cat-btn:disabled { opacity: .5; cursor: not-allowed; }
+.cat-btn-primary { background: var(--blue); border-color: var(--blue); color: white; }
+.cat-btn-primary:hover { background: var(--blue-dark); border-color: var(--blue-dark); color: white; }
+.cat-btn-primary:disabled { background: var(--border-strong); border-color: var(--border-strong); color: var(--text-muted); }
+.cat-btn-secondary { background: white; }
+.toast-host { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+.toast-msg { background: var(--text-primary); color: white; padding: 10px 16px; border-radius: 8px; font-size: .82rem; box-shadow: 0 8px 24px rgba(0,0,0,.18); max-width: 380px; opacity: 0; transform: translateY(8px); transition: opacity .2s, transform .2s; }
+.toast-msg.show { opacity: 1; transform: translateY(0); }
+.toast-msg.error { background: var(--red-light); }
+
 </style>
 </head>
 <body>
@@ -405,6 +469,7 @@ footer span{color:var(--text-secondary);font-weight:500}
     <button class="tab-btn" onclick="switchTab('bs',this)">🏦 Balance Sheet</button>
     <button class="tab-btn" onclick="switchTab('report',this);reportLoaded=false;loadReport()">📄 Management Report</button>
     <button class="tab-btn" onclick="switchTab('vendors',this);loadVendors()">🏢 Vendor Analysis</button>
+    <button class="tab-btn" onclick="switchTab('bankrec',this);initBankRec()">🏦 Bank Rec</button>
   </nav>
 
   <main>
@@ -544,7 +609,33 @@ footer span{color:var(--text-secondary);font-weight:500}
       </div>
     </div>
 
+    <!-- BANK REC TAB -->
+    <div class="tab-panel" id="tab-bankrec">
+      <div>
+        <div class="slabel">Bank Reconciliation</div>
+      </div>
+      <div class="rec-layout">
+        <!-- LEFT: history list -->
+        <div class="rec-history">
+          <button class="rec-new-btn" onclick="newBankRec()">+ New Reconciliation</button>
+          <h3 style="font-size: .65rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-muted); font-family: 'Outfit', sans-serif; font-weight: 600; margin-bottom: 8px;">History</h3>
+          <div class="rec-history-list" id="recHistoryList">
+            <div style="font-size: .75rem; color: var(--text-muted); text-align: center; padding: 20px 0;">Loading…</div>
+          </div>
+        </div>
+
+        <!-- RIGHT: active rec -->
+        <div class="rec-active" id="recActive">
+          <div class="rec-empty">
+            Click <strong>+ New Reconciliation</strong> to start, or pick an in-progress rec from the left.
+          </div>
+        </div>
+      </div>
+    </div>
+
   </main>
+
+  <div class="toast-host" id="toastHost"></div>
 
   <footer>
     <span id="footerBrand">Clear Books Advisory</span> &nbsp;·&nbsp; Prepared by Clear Books Advisory &nbsp;·&nbsp; Confidential | Management Use Only &nbsp;·&nbsp; Generated <span id="genDate"></span>
@@ -569,6 +660,35 @@ function switchTab(id, el){
   document.querySelectorAll('.tab-btn').forEach(t=>t.classList.remove('active'));
   document.getElementById('tab-'+id).classList.add('active');
   el.classList.add('active');
+}
+
+// ── Bank Rec utilities ────────────────────────────────────────────
+function escapeHtml(s) {
+  if (s == null) return '';
+  return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
+
+function showToast(msg, isError) {
+  const host = document.getElementById('toastHost');
+  if (!host) { (isError ? console.error : console.log)(msg); return; }
+  const el = document.createElement('div');
+  el.className = 'toast-msg' + (isError ? ' error' : '');
+  el.textContent = msg;
+  host.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('show'));
+  setTimeout(() => {
+    el.classList.remove('show');
+    setTimeout(() => el.remove(), 250);
+  }, 3500);
+}
+
+function appConfirm(msg) {
+  return Promise.resolve(window.confirm(msg));
+}
+
+function fmtMoney(n) {
+  const v = Number(n || 0);
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v);
 }
 
 function fmt(n,compact=false){
@@ -1586,6 +1706,360 @@ function renderVendors(data) {
 }
 
 checkStatus();
+
+// ── BANK REC MODULE ──────────────────────────────────────────────
+let recBankAccounts = [];
+let recAccountsLoaded = false;
+let recCurrent = null;
+let recTxns = [];
+let recCleared = new Set();
+let recInited = false;
+let recSessions = [];
+let _recAllTxns = null;
+let _recAllTxnsAccountId = null;
+
+async function loadRecBankAccounts() {
+  if (recAccountsLoaded) return;
+  try {
+    const res = await fetch('/api/bank-accounts').then(r => r.json());
+    recBankAccounts = res.accounts || [];
+    recAccountsLoaded = true;
+  } catch (err) {
+    console.error('loadRecBankAccounts failed:', err);
+    showToast('Could not load bank accounts: ' + (err.message || err), true);
+  }
+}
+
+async function initBankRec() {
+  if (recInited) {
+    loadRecSessions();
+    return;
+  }
+  recInited = true;
+  await loadRecBankAccounts();
+  await loadRecSessions();
+}
+
+async function loadRecSessions() {
+  try {
+    const res = await fetch('/api/bank-rec/sessions').then(r => r.json());
+    recSessions = res.sessions || [];
+    renderRecHistory();
+  } catch (err) {
+    console.error('loadRecSessions failed:', err);
+  }
+}
+
+function formatRecPeriod(start, end) {
+  if (!start || !end) return '—';
+  const m = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const [sy, smo] = String(start).split('-');
+  return `${m[Number(smo) - 1]} ${sy}`;
+}
+
+function renderRecHistory() {
+  const list = document.getElementById('recHistoryList');
+  if (!list) return;
+  if (!recSessions.length) {
+    list.innerHTML = '<div style="font-size: .75rem; color: var(--text-muted); text-align: center; padding: 20px 0;">No saved recs yet.</div>';
+    return;
+  }
+  list.innerHTML = recSessions.map(s => `
+    <div class="rec-history-item ${s.status} ${recCurrent && recCurrent.id === s.id ? 'active' : ''}" onclick="loadRec(${s.id})">
+      <div class="period">${formatRecPeriod(s.periodStart, s.periodEnd)} <span class="badge">${s.status === 'finalized' ? '✓ Done' : 'In Progress'}</span></div>
+      <div class="meta">${escapeHtml(s.bankAccountName || '')} · ending $${(Number(s.endingBalance) || 0).toFixed(2)}</div>
+    </div>
+  `).join('');
+}
+
+function newBankRec() {
+  if (!recAccountsLoaded || !recBankAccounts.length) {
+    showToast('Bank accounts not loaded yet. Try again in a moment.', true);
+    return;
+  }
+  const today = new Date();
+  const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+  const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0);
+  recCurrent = {
+    id: null,
+    bankAccountId: recBankAccounts[0].Id,
+    bankAccountName: recBankAccounts[0].FullyQualifiedName,
+    periodStart: lastMonth.toISOString().split('T')[0],
+    periodEnd: lastMonthEnd.toISOString().split('T')[0],
+    beginningBalance: 0,
+    endingBalance: 0,
+    status: 'in_progress',
+    notes: ''
+  };
+  recCleared = new Set();
+  recTxns = [];
+  renderRecActive();
+}
+
+async function loadRec(id) {
+  const session = recSessions.find(s => s.id === id);
+  if (!session) return;
+  recCurrent = { ...session };
+  recCleared = new Set((session.clearedTxnIds || []).map(String));
+  await loadRecTxns();
+  renderRecHistory();
+  renderRecActive();
+}
+
+async function loadRecTxns(opts = {}) {
+  if (!recCurrent) return;
+  const force = !!opts.force;
+  if (force || _recAllTxns === null || _recAllTxnsAccountId !== recCurrent.bankAccountId) {
+    try {
+      const url = `/api/bank-rec/transactions?bankAccountId=${encodeURIComponent(recCurrent.bankAccountId)}&start=1990-01-01&end=2099-12-31`;
+      const res = await fetch(url).then(r => r.json());
+      _recAllTxns = res.transactions || [];
+      _recAllTxnsAccountId = recCurrent.bankAccountId;
+    } catch (err) {
+      console.error('loadRecTxns failed:', err);
+      _recAllTxns = [];
+      _recAllTxnsAccountId = null;
+    }
+  }
+  applyRecPeriodFilter();
+}
+
+function applyRecPeriodFilter() {
+  if (!_recAllTxns || !recCurrent) { recTxns = []; return; }
+  const start = recCurrent.periodStart;
+  const end = recCurrent.periodEnd;
+  if (!start || !end) { recTxns = []; return; }
+  recTxns = _recAllTxns.filter(t => t.date >= start && t.date <= end);
+}
+
+function computeRecStats() {
+  if (!recCurrent) return { clearedInflow: 0, clearedOutflow: 0, clearedBalance: 0, difference: 0 };
+  let clearedInflow = 0, clearedOutflow = 0;
+  for (const t of recTxns) {
+    if (!recCleared.has(String(t.id))) continue;
+    if (t.amount > 0) clearedInflow += t.amount;
+    else clearedOutflow += t.amount;
+  }
+  const clearedBalance = +(Number(recCurrent.beginningBalance) + clearedInflow + clearedOutflow).toFixed(2);
+  const difference = +(Number(recCurrent.endingBalance) - clearedBalance).toFixed(2);
+  return { clearedInflow, clearedOutflow, clearedBalance, difference };
+}
+
+function renderRecActive() {
+  const el = document.getElementById('recActive');
+  if (!el) return;
+  if (!recCurrent) {
+    el.innerHTML = `<div class="rec-empty">Click <strong>+ New Reconciliation</strong> to start.</div>`;
+    return;
+  }
+  const stats = computeRecStats();
+  const isLocked = recCurrent.status === 'finalized';
+  const dis = isLocked ? 'disabled' : '';
+  const bankOpts = recBankAccounts.map(a =>
+    `<option value="${a.Id}" ${a.Id === recCurrent.bankAccountId ? 'selected' : ''}>${escapeHtml(a.FullyQualifiedName)}</option>`
+  ).join('');
+
+  const lockedBanner = isLocked ? `
+    <div style="background: rgba(0,184,148,.08); border: 1px solid var(--green-light); border-radius: 10px; padding: 12px 16px; margin: 14px 22px 0; display: flex; align-items: center; gap: 10px;">
+      <span style="font-size: 1.1rem;">🔒</span>
+      <div style="flex:1;">
+        <div style="font-weight: 600; color: var(--text-primary); font-size: .85rem;">Reconciliation finalized</div>
+        <div style="font-size: .72rem; color: var(--text-muted); margin-top: 2px;">Locked on ${recCurrent.finalizedAt ? new Date(recCurrent.finalizedAt).toLocaleString() : '—'}. Read-only — start a new rec to make changes.</div>
+      </div>
+    </div>` : '';
+
+  el.innerHTML = `
+    ${lockedBanner}
+    <div class="rec-setup">
+      <div class="rec-setup-grid">
+        <div class="rec-field">
+          <label>Bank Account</label>
+          <select id="recBankSelect" ${dis} onchange="recOnFieldChange('bankAccountId', this.value)">${bankOpts}</select>
+        </div>
+        <div class="rec-field">
+          <label>Period Start</label>
+          <input type="date" id="recStart" ${dis} value="${recCurrent.periodStart}" onchange="recOnDateChange('periodStart', this.value)"/>
+        </div>
+        <div class="rec-field">
+          <label>Period End</label>
+          <input type="date" id="recEnd" ${dis} value="${recCurrent.periodEnd}" onchange="recOnDateChange('periodEnd', this.value)"/>
+        </div>
+        <div class="rec-field">
+          <label>Beginning Balance</label>
+          <input type="number" step="0.01" id="recBeginBal" ${dis} value="${recCurrent.beginningBalance}" onchange="recOnFieldChange('beginningBalance', this.value)"/>
+        </div>
+        <div class="rec-field">
+          <label>Ending Balance (Statement)</label>
+          <input type="number" step="0.01" id="recEndBal" ${dis} value="${recCurrent.endingBalance}" onchange="recOnFieldChange('endingBalance', this.value)"/>
+        </div>
+      </div>
+      <div style="margin-top: 10px; display: flex; gap: 8px; align-items: center;">
+        ${isLocked ? '' : `<button class="cat-btn cat-btn-secondary" onclick="loadRecTxnsAndRender({force:true})" title="Re-fetch transactions from QuickBooks">↻ Refresh from QuickBooks</button>`}
+        <span id="recPeriodStatus" style="font-size: .75rem; color: var(--text-muted); padding-left: 6px;">${recTxns.length ? `${recTxns.length} transactions in period${_recAllTxns ? ` (of ${_recAllTxns.length} total in account)` : ''}` : (_recAllTxns ? `No transactions in period · ${_recAllTxns.length} total in account` : 'Click Refresh to load transactions')}</span>
+      </div>
+    </div>
+
+    <div class="rec-stats" id="recStatsBox">
+      <div class="rec-stat"><div class="lbl">Beginning</div><div class="val">${fmtMoney(recCurrent.beginningBalance)}</div></div>
+      <div class="rec-stat"><div class="lbl">+ Cleared Inflows</div><div class="val green">+${fmtMoney(stats.clearedInflow).replace('$','$')}</div></div>
+      <div class="rec-stat"><div class="lbl">- Cleared Outflows</div><div class="val red">${fmtMoney(stats.clearedOutflow)}</div></div>
+      <div class="rec-stat"><div class="lbl">= Cleared Balance</div><div class="val">${fmtMoney(stats.clearedBalance)}</div></div>
+      <div class="rec-stat">
+        <div class="lbl">Difference vs Statement</div>
+        <div class="val ${Math.abs(stats.difference) < 0.01 ? 'green' : 'red'}">${fmtMoney(stats.difference)}</div>
+      </div>
+    </div>
+
+    <div id="recTableBox">${renderRecTableHTML(dis)}</div>
+
+    <div class="rec-bar">
+      <div class="summary ${isLocked ? 'balanced' : (Math.abs(stats.difference) < 0.01 ? 'balanced' : (recTxns.length ? 'unbalanced' : ''))}">
+        ${isLocked ? `🔒 Finalized · ${recCleared.size} of ${recTxns.length || (recCurrent.clearedTxnIds||[]).length} cleared` :
+          (recTxns.length === 0 ? 'Refresh to load transactions, then check off cleared rows.' :
+          (Math.abs(stats.difference) < 0.01
+            ? `✓ Reconciled. Difference is $0.00 — ready to finalize.`
+            : `Difference: ${fmtMoney(stats.difference)} · ${recCleared.size} of ${recTxns.length} cleared`))}
+      </div>
+      <div class="rec-actions">
+        ${isLocked ? '' : `
+          <button class="cat-btn cat-btn-secondary" onclick="saveRecProgress()">💾 Save Progress</button>
+          <button class="cat-btn cat-btn-primary" ${Math.abs(stats.difference) >= 0.01 ? 'disabled' : ''} onclick="finalizeRec()">✓ Finalize Reconciliation</button>
+          ${recCurrent.id ? `<button class="cat-btn cat-btn-secondary" onclick="deleteRec()" style="color: var(--red-light);">🗑 Discard</button>` : ''}
+        `}
+      </div>
+    </div>
+  `;
+}
+
+function renderRecTableHTML(dis) {
+  if (!recTxns.length) {
+    return `<div class="rec-empty">No transactions in this period yet. Set the dates above and click <strong>↻ Refresh from QuickBooks</strong>.</div>`;
+  }
+  return `<div style="overflow-x: auto;">
+    <table class="rec-table">
+      <thead>
+        <tr>
+          <th class="center" style="width: 40px;"><input type="checkbox" class="rec-checkbox" ${dis} onchange="recToggleAll(this.checked)" ${recCleared.size === recTxns.length && recTxns.length > 0 ? 'checked' : ''}/></th>
+          <th style="width: 90px;">Date</th>
+          <th style="width: 100px;">Type</th>
+          <th>Description / Vendor</th>
+          <th class="right" style="width: 110px;">Amount</th>
+          <th style="width: 70px;">QBO ID</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${recTxns.map(t => `
+          <tr class="${recCleared.has(String(t.id)) ? 'cleared' : ''}">
+            <td class="center"><input type="checkbox" class="rec-checkbox" ${dis} onchange="recToggleTxn('${t.id}', this.checked)" ${recCleared.has(String(t.id)) ? 'checked' : ''}/></td>
+            <td>${escapeHtml(t.date)}</td>
+            <td><span class="rec-pill ${t.type.toLowerCase().replace(/\s+/g,'')}">${escapeHtml(t.type)}</span></td>
+            <td>${escapeHtml(t.vendor || t.description || '—')}</td>
+            <td class="right ${t.amount < 0 ? 'neg' : 'pos'}">${t.amount < 0 ? '−' : '+'}$${Math.abs(t.amount).toFixed(2)}</td>
+            <td style="font-size: .7rem; color: var(--text-muted);">#${escapeHtml(String(t.id))}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
+
+async function recOnFieldChange(field, value) {
+  if (!recCurrent || recCurrent.status === 'finalized') return;
+  recCurrent[field] = (field === 'beginningBalance' || field === 'endingBalance') ? Number(value) : value;
+  if (field === 'bankAccountId') {
+    const bank = recBankAccounts.find(a => a.Id === value);
+    if (bank) recCurrent.bankAccountName = bank.FullyQualifiedName;
+    await loadRecTxns({ force: true });
+  }
+  renderRecActive();
+}
+
+async function recOnDateChange(field, value) {
+  if (!recCurrent || recCurrent.status === 'finalized') return;
+  if (recCurrent[field] === value) return;
+  recCurrent[field] = value;
+  applyRecPeriodFilter();
+  renderRecActive();
+}
+
+async function loadRecTxnsAndRender(opts = {}) {
+  await loadRecTxns(opts);
+  renderRecActive();
+}
+
+function recToggleTxn(txnId, isChecked) {
+  if (recCurrent && recCurrent.status === 'finalized') return;
+  const k = String(txnId);
+  if (isChecked) recCleared.add(k);
+  else recCleared.delete(k);
+  renderRecActive();
+}
+
+function recToggleAll(isChecked) {
+  if (recCurrent && recCurrent.status === 'finalized') return;
+  if (isChecked) recCleared = new Set(recTxns.map(t => String(t.id)));
+  else recCleared = new Set();
+  renderRecActive();
+}
+
+async function saveRecProgress() {
+  if (!recCurrent || recCurrent.status === 'finalized') return;
+  const body = { ...recCurrent, clearedTxnIds: [...recCleared], status: 'in_progress' };
+  try {
+    const res = await fetch('/api/bank-rec/session', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(typeof data.error === 'string' ? data.error : JSON.stringify(data.error || data));
+    recCurrent = data.session;
+    showToast(`✓ Progress saved (${recCleared.size} of ${recTxns.length} cleared)`);
+    await loadRecSessions();
+  } catch (err) {
+    showToast('Save failed: ' + (err.message || err), true);
+  }
+}
+
+async function finalizeRec() {
+  if (!recCurrent) return;
+  const stats = computeRecStats();
+  if (Math.abs(stats.difference) >= 0.01) {
+    showToast('Cannot finalize: difference is not $0.00.', true);
+    return;
+  }
+  if (!await appConfirm(`Finalize reconciliation for ${formatRecPeriod(recCurrent.periodStart, recCurrent.periodEnd)}? This locks the rec — no further edits.`)) return;
+  const body = { ...recCurrent, clearedTxnIds: [...recCleared], status: 'finalized' };
+  try {
+    const res = await fetch('/api/bank-rec/session', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(typeof data.error === 'string' ? data.error : JSON.stringify(data.error || data));
+    recCurrent = data.session;
+    showToast(`✓ Reconciliation finalized`);
+    await loadRecSessions();
+    renderRecActive();
+  } catch (err) {
+    showToast('Finalize failed: ' + (err.message || err), true);
+  }
+}
+
+async function deleteRec() {
+  if (!recCurrent || !recCurrent.id) return;
+  if (!await appConfirm('Discard this in-progress reconciliation? This cannot be undone.')) return;
+  try {
+    const res = await fetch(`/api/bank-rec/session/${recCurrent.id}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(typeof data.error === 'string' ? data.error : JSON.stringify(data.error || data));
+    recCurrent = null;
+    recTxns = [];
+    recCleared = new Set();
+    await loadRecSessions();
+    renderRecActive();
+    showToast('Reconciliation discarded');
+  } catch (err) {
+    showToast('Delete failed: ' + (err.message || err), true);
+  }
+}
 </script>
 </body>
 </html>
