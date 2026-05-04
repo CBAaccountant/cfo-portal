@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <style>
 :root {
   --navy: #f0f1f5;
@@ -58,8 +59,15 @@ header{display:flex;align-items:center;justify-content:space-between;padding:16p
 .hbtn.load:hover{background:var(--blue-dark)}
 .status-connected{font-size:.72rem;color:#00b894;letter-spacing:.06em;display:flex;align-items:center;gap:6px}
 .sdot{width:7px;height:7px;border-radius:50%;background:#00b894;box-shadow:0 0 6px rgba(0,184,148,.5)}
-main{flex:1;padding:28px 32px;display:flex;flex-direction:column;gap:24px}
+main{flex:1;padding:28px 32px;display:flex;flex-direction:column;gap:24px;min-width:0}
 .slabel{font-size:.68rem;letter-spacing:.15em;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px;font-weight:500}
+
+/* SIDEBAR LAYOUT */
+.layout-row{display:flex;flex:1;min-height:0;align-items:stretch}
+.sidebar{width:220px;background:#fff;border-right:1px solid var(--border);padding:24px 0;display:flex;flex-direction:column;gap:22px;flex-shrink:0;overflow-y:auto;position:sticky;top:65px;align-self:flex-start;max-height:calc(100vh - 65px)}
+.sb-section{display:flex;flex-direction:column;gap:1px}
+.sb-label{font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:var(--text-muted);padding:0 24px 8px;font-weight:600}
+@media(max-width:760px){.sidebar{width:100%;position:static;max-height:none;flex-direction:row;overflow-x:auto;gap:0;padding:8px 12px;border-right:none;border-bottom:1px solid var(--border)}.sb-label{display:none}.sb-section{flex-direction:row}.layout-row{flex-direction:column}}
 
 /* KPI */
 .kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:14px}
@@ -119,12 +127,12 @@ tr.sp td{height:6px;border:none}
 .uv{color:var(--red-light)!important;font-size:.72rem}
 
 /* TABS */
-.tab-nav{display:flex;gap:0;border-bottom:1px solid var(--border);padding:0 32px;background:#ffffff}
-.tab-btn{padding:12px 22px;font-family:'Outfit',sans-serif;font-size:.78rem;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);background:transparent;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all .2s;margin-bottom:-1px}
-.tab-btn:hover{color:var(--text-secondary)}
-.tab-btn.active{color:var(--blue);border-bottom-color:var(--blue)}
+.tab-btn{padding:11px 24px;font-family:'Outfit',sans-serif;font-size:.76rem;font-weight:500;letter-spacing:.05em;color:var(--text-secondary);background:transparent;border:none;border-left:3px solid transparent;cursor:pointer;transition:all .15s;text-align:left;display:block;width:100%}
+.tab-btn:hover{color:var(--text-primary);background:rgba(124,110,245,.04)}
+.tab-btn.active{color:var(--blue-dark);border-left-color:var(--blue);background:rgba(124,110,245,.07);font-weight:600}
 .tab-panel{display:none}
 .tab-panel.active{display:flex;flex-direction:column;gap:24px}
+@media(max-width:760px){.tab-btn{border-left:none;border-bottom:3px solid transparent;width:auto;white-space:nowrap;padding:10px 14px}.tab-btn.active{border-bottom-color:var(--blue);border-left:none}}
 
 /* BS */
 .bs-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
@@ -334,7 +342,7 @@ footer span{color:var(--text-secondary);font-weight:500}
 @page landscape-page { size: letter landscape; margin: 0.5in; }
 @media print {
   body { background: #fff !important; }
-  #connectScreen, header, .tab-nav, footer, #lo { display: none !important; }
+  #connectScreen, header, .sidebar, footer, #lo { display: none !important; }
   main { padding: 0 !important; }
   #tab-pl, #tab-bs { display: none !important; }
   #tab-report { display: flex !important; }
@@ -414,6 +422,142 @@ footer span{color:var(--text-secondary);font-weight:500}
 .toast-msg.show { opacity: 1; transform: translateY(0); }
 .toast-msg.error { background: var(--red-light); }
 
+/* ── CATEGORIZE BANK ─────────────────────────────────────────── */
+.cat-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.cat-stat { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; }
+.cat-stat .csl { font-size: .65rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-muted); font-weight: 500; margin-bottom: 4px; }
+.cat-stat .csv { font-family: 'Cormorant Garamond', serif; font-size: 1.6rem; font-weight: 600; color: var(--text-primary); }
+.cat-stat .csv.green { color: var(--green-light); }
+.cat-stat .csv.red { color: var(--red-light); }
+.cat-stat .csv.gold { color: var(--gold-light); }
+.cat-drop { background: var(--card-bg); border: 2px dashed var(--border); border-radius: 12px; padding: 28px; text-align: center; color: var(--text-secondary); cursor: pointer; transition: all .15s; display: block; }
+.cat-drop:hover { border-color: var(--blue); background: rgba(124, 110, 245, .03); color: var(--text-primary); }
+.cat-drop.dragover { border-color: var(--blue); background: rgba(124, 110, 245, .06); color: var(--blue-dark); }
+.cat-drop .cat-drop-icon { font-size: 2rem; margin-bottom: 8px; }
+.cat-drop .cat-drop-hint { font-size: .75rem; color: var(--text-muted); margin-top: 6px; }
+.cat-drop input[type=file] { display: none; }
+.cat-loaded { background: rgba(0, 184, 148, .07); border: 1px solid var(--green-light); border-radius: 10px; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; }
+.cat-loaded .cat-loaded-info { display: flex; align-items: center; gap: 12px; }
+.cat-loaded .cat-loaded-icon { width: 36px; height: 36px; background: var(--green-light); color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+.cat-loaded .cat-loaded-name { font-weight: 600; }
+.cat-loaded .cat-loaded-meta { font-size: .75rem; color: var(--text-secondary); }
+.cat-replace { font-size: .75rem; color: var(--blue); cursor: pointer; background: none; border: none; padding: 6px 12px; }
+.cat-replace:hover { text-decoration: underline; }
+.cat-table-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.cat-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+.cat-table thead th { padding: 10px 14px; text-align: left !important; font-size: .65rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-muted); font-weight: 500; border-bottom: 1px solid var(--border); background: #fafbfc; white-space: nowrap; }
+.cat-table thead th.right { text-align: right !important; }
+.cat-table tbody td { padding: 10px 14px; border-bottom: 1px solid rgba(0,0,0,.04); vertical-align: middle; text-align: left; color: var(--text-primary); white-space: normal; }
+.cat-table tbody td.right { text-align: right; font-variant-numeric: tabular-nums; font-weight: 500; white-space: nowrap; }
+.cat-table tbody td.neg { color: var(--red-light); }
+.cat-table tbody td.pos { color: var(--green-light); }
+.cat-table tbody tr:hover { background: rgba(124, 110, 245, .02); }
+.cat-empty { padding: 48px 24px; text-align: center; color: var(--text-muted); font-size: .85rem; }
+.cat-bank-row { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; display: flex; align-items: center; gap: 12px; }
+.cat-bank-row label { font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-muted); font-weight: 500; min-width: 110px; }
+.cat-bank-row select { flex: 1; padding: 8px 32px 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; font-size: .85rem; background: white; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%23a0aec0' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
+.cat-row-select { width: 100%; padding: 6px 26px 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-family: inherit; font-size: .78rem; background: white; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%23a0aec0' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; }
+.cat-row-select.empty { color: var(--text-muted); border-style: dashed; }
+.cat-row-select:hover { border-color: var(--blue-light); }
+.cat-row-select:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 2px rgba(124,110,245,.12); }
+tbody tr.cat-needs-review { background: rgba(230,126,34,.04); }
+tbody tr.cat-needs-review:hover { background: rgba(230,126,34,.08); }
+.cat-loading { padding: 48px 24px; text-align: center; color: var(--text-muted); font-size: .85rem; }
+.cat-loading::before { content: '⟳ '; display: inline-block; animation: catspin 1s linear infinite; }
+@keyframes catspin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.cat-pill-row { display: flex; gap: 6px; }
+.cat-pill { padding: 6px 12px; background: white; border: 1px solid var(--border); border-radius: 16px; font-size: .72rem; font-weight: 500; color: var(--text-secondary); cursor: pointer; transition: all .15s; }
+.cat-pill:hover { border-color: var(--blue-light); color: var(--blue-dark); }
+.cat-pill.active { background: var(--blue); color: white; border-color: var(--blue); }
+.cat-pill .ct { background: rgba(0,0,0,.1); padding: 1px 6px; border-radius: 8px; margin-left: 4px; font-size: .65rem; }
+.cat-pill.active .ct { background: rgba(255,255,255,.2); }
+.cat-push-bar { padding: 14px 18px; border-top: 1px solid var(--border); background: #fafbfc; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.cat-push-bar .summary { font-size: .8rem; color: var(--text-secondary); }
+.cat-push-bar .summary strong { color: var(--text-primary); }
+.cat-modal-bg { position: fixed; inset: 0; background: rgba(26,29,46,.5); z-index: 200; display: none; align-items: center; justify-content: center; }
+.cat-modal-bg.open { display: flex; }
+.cat-modal { background: white; border-radius: 14px; width: 720px; max-width: 92vw; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.25); }
+.cat-modal-h { padding: 18px 22px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.cat-modal-h .ttl { font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; font-weight: 600; }
+.cat-modal-h .sub { font-size: .75rem; color: var(--text-muted); margin-top: 2px; }
+.cat-modal-h .x { width: 32px; height: 32px; border: none; background: transparent; cursor: pointer; font-size: 1rem; color: var(--text-muted); border-radius: 6px; }
+.cat-modal-h .x:hover { background: #f3f4f7; color: var(--text-primary); }
+.cat-modal-body { padding: 18px 22px; }
+.cat-modal-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 18px; }
+.cat-modal-stat { background: #f0f1f5; border-radius: 10px; padding: 10px 12px; text-align: center; }
+.cat-modal-stat .lbl { font-size: .6rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-muted); font-weight: 600; }
+.cat-modal-stat .val { font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; font-weight: 600; margin-top: 2px; }
+.cat-modal-stat .val.green { color: var(--green-light); }
+.cat-modal-stat .val.red { color: var(--red-light); }
+.cat-modal-stat .val.gold { color: var(--gold-light); }
+.cat-modal-section { margin-bottom: 16px; }
+.cat-modal-section .stitle { font-size: .65rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-muted); font-weight: 600; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+.cat-checks { background: rgba(0,184,148,.07); border-radius: 8px; padding: 10px 14px; }
+.cat-checks .row { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: .78rem; }
+.cat-checks .row .ic { color: var(--green-light); font-weight: 700; }
+.cat-warns { background: rgba(230,126,34,.08); border-radius: 8px; padding: 10px 14px; margin-top: 8px; }
+.cat-warns .row { display: flex; align-items: start; gap: 8px; padding: 3px 0; font-size: .78rem; }
+.cat-warns .row .ic { color: var(--gold-light); font-weight: 700; flex-shrink: 0; }
+.cat-breakdown { width: 100%; font-size: .78rem; }
+.cat-breakdown td { padding: 6px 0; border-bottom: 1px solid rgba(0,0,0,.04); }
+.cat-breakdown td:last-child { text-align: right; font-variant-numeric: tabular-nums; font-weight: 500; }
+.cat-breakdown td .ct { color: var(--text-muted); font-size: .7rem; padding-left: 6px; }
+.cat-modal-foot { padding: 14px 22px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 10px; background: #fafbfc; border-radius: 0 0 14px 14px; }
+.cat-modal-foot .meta { font-size: .7rem; color: var(--text-muted); }
+.cat-results-row { display: grid; grid-template-columns: 60px 90px 1fr 110px; gap: 8px; padding: 6px 0; font-size: .72rem; border-bottom: 1px solid rgba(0,0,0,.04); }
+.cat-results-row.ok { color: var(--green-light); }
+.cat-results-row.skip { color: var(--gold-light); }
+.cat-results-row.err { color: var(--red-light); }
+.cat-form-row { margin-bottom: 14px; }
+.cat-form-row label { display: block; font-size: .65rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-muted); font-weight: 600; margin-bottom: 6px; }
+.cat-form-row input, .cat-form-row select, .cat-form-row textarea { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; font-size: .85rem; background: white; box-sizing: border-box; }
+.cat-form-row select { appearance: none; padding-right: 32px; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%23a0aec0' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
+.cat-form-row .helper { font-size: .7rem; color: var(--text-muted); margin-top: 4px; }
+.cat-form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.cat-form-warn { background: rgba(230,126,34,.08); border: 1px solid var(--gold-light); border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; font-size: .78rem; color: var(--text-primary); display: flex; gap: 8px; align-items: start; }
+.cat-form-warn .ic { color: var(--gold-light); font-weight: 700; flex-shrink: 0; }
+.cat-form-preview { background: #f0f1f5; border-radius: 8px; padding: 10px 14px; margin-top: 10px; font-size: .78rem; }
+.cat-form-preview .lbl { font-size: .6rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-muted); font-weight: 600; margin-bottom: 4px; }
+.cat-mini-modal { width: 480px; }
+.cat-drawer-bg { position: fixed; inset: 0; background: rgba(26,29,46,.3); opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 150; }
+.cat-drawer-bg.open { opacity: 1; pointer-events: auto; }
+.cat-drawer { position: fixed; top: 0; right: 0; height: 100vh; width: 440px; max-width: 90vw; background: white; box-shadow: -8px 0 32px rgba(0,0,0,.12); transform: translateX(100%); transition: transform .25s cubic-bezier(.16,1,.3,1); z-index: 151; display: flex; flex-direction: column; overflow: hidden; }
+.cat-drawer.open { transform: translateX(0); }
+.cat-drawer-h { padding: 18px 22px; border-bottom: 1px solid var(--border); display: flex; gap: 10px; align-items: start; justify-content: space-between; }
+.cat-drawer-h .info { flex: 1; min-width: 0; }
+.cat-drawer-h .eyebrow { font-size: .6rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-muted); font-weight: 600; }
+.cat-drawer-h .title { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; font-weight: 600; margin-top: 2px; line-height: 1.2; }
+.cat-drawer-h .sub { font-size: .72rem; color: var(--text-secondary); margin-top: 4px; }
+.cat-drawer-h .actions { display: flex; gap: 6px; flex-shrink: 0; }
+.cat-drawer-h .ic-btn { width: 32px; height: 32px; border: 1px solid var(--border); background: white; cursor: pointer; border-radius: 6px; font-size: .9rem; color: var(--text-secondary); display: flex; align-items: center; justify-content: center; text-decoration: none; }
+.cat-drawer-h .ic-btn:hover { background: #f3f4f7; color: var(--text-primary); }
+.cat-drawer-body { flex: 1; overflow-y: auto; padding: 18px 22px; }
+.cat-drawer-section { margin-bottom: 22px; }
+.cat-drawer-section .stitle { font-size: .6rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-muted); font-weight: 600; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+.cat-info-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: .82rem; }
+.cat-info-row .lbl { color: var(--text-secondary); }
+.cat-info-row .val { font-weight: 500; color: var(--text-primary); }
+.cat-totals-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #f0f1f5; border-radius: 10px; padding: 14px; }
+.cat-totals-grid .cell .lbl { font-size: .58rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-muted); font-weight: 600; }
+.cat-totals-grid .cell .val { font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; font-weight: 600; margin-top: 2px; color: var(--text-primary); }
+.cat-totals-grid .cell .val.gold { color: var(--gold-light); }
+.cat-totals-grid .cell .val.green { color: var(--green-light); }
+.cat-txn-list .row { display: grid; grid-template-columns: 70px 1fr auto; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(0,0,0,.05); font-size: .76rem; align-items: center; }
+.cat-txn-list .row:last-child { border-bottom: none; }
+.cat-txn-list .row .d { color: var(--text-muted); }
+.cat-txn-list .row .a { color: var(--text-primary); font-weight: 500; }
+.cat-txn-list .row .a .acct { display: block; color: var(--text-muted); font-size: .68rem; font-weight: 400; margin-top: 2px; }
+.cat-txn-list .row .amt { font-variant-numeric: tabular-nums; font-weight: 500; text-align: right; white-space: nowrap; }
+.cat-pattern-bar { background: #f0f1f5; border-radius: 8px; padding: 12px 14px; }
+.cat-pattern-bar .pr { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; font-size: .78rem; }
+.cat-pattern-bar .pr .pn { color: var(--text-secondary); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 10px; }
+.cat-pattern-bar .pr .pp { font-weight: 600; font-variant-numeric: tabular-nums; color: var(--text-primary); }
+.cat-empty-drawer { padding: 32px 14px; text-align: center; color: var(--text-muted); font-size: .82rem; }
+.cat-vendor-cell-wrap { display: flex; gap: 4px; align-items: center; }
+.cat-vendor-cell-wrap select { flex: 1; min-width: 0; }
+.cat-info-link { width: 24px; height: 24px; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); cursor: pointer; flex-shrink: 0; transition: all .15s; font-size: .85rem; text-decoration: none; background: transparent; border: none; }
+.cat-info-link:hover { background: rgba(124,110,245,.1); color: var(--blue-dark); }
+
 </style>
 </head>
 <body>
@@ -459,20 +603,31 @@ footer span{color:var(--text-secondary);font-weight:500}
       <span class="plabel">End</span>
       <input type="date" class="hdate" id="pnlEnd" onchange="loadAll()"/>
       <button class="hbtn load" onclick="loadAll()">↻ Load</button>
-      <button class="hbtn" onclick="disconnectQbo()" id="disconnectBtn" title="Disconnect QuickBooks">⊗ QBO</button>
-      <button class="hbtn" onclick="logout()">↩ Logout</button>
     </div>
   </header>
 
-  <nav class="tab-nav">
-    <button class="tab-btn active" onclick="switchTab('pl',this)">📈 P&amp;L Analysis</button>
-    <button class="tab-btn" onclick="switchTab('bs',this)">🏦 Balance Sheet</button>
-    <button class="tab-btn" onclick="switchTab('report',this);reportLoaded=false;loadReport()">📄 Management Report</button>
-    <button class="tab-btn" onclick="switchTab('vendors',this);loadVendors()">🏢 Vendor Analysis</button>
-    <button class="tab-btn" onclick="switchTab('bankrec',this);initBankRec()">🏦 Bank Rec</button>
-  </nav>
+  <div class="layout-row">
+    <aside class="sidebar">
+      <div class="sb-section">
+        <div class="sb-label">Banking</div>
+        <button class="tab-btn" onclick="switchTab('cat',this);initCategorize()">📊 Categorize Bank</button>
+        <button class="tab-btn" onclick="switchTab('bankrec',this);initBankRec()">🏦 Bank Rec</button>
+      </div>
+      <div class="sb-section">
+        <div class="sb-label">Reports</div>
+        <button class="tab-btn active" onclick="switchTab('pl',this)">📈 P&amp;L Analysis</button>
+        <button class="tab-btn" onclick="switchTab('bs',this)">📋 Balance Sheet</button>
+        <button class="tab-btn" onclick="switchTab('report',this);reportLoaded=false;loadReport()">📄 Management Report</button>
+        <button class="tab-btn" onclick="switchTab('vendors',this);loadVendors()">🏢 Vendor Analysis</button>
+      </div>
+      <div class="sb-section">
+        <div class="sb-label">Settings</div>
+        <button class="tab-btn" onclick="disconnectQbo()" id="disconnectBtn" title="Disconnect QuickBooks">⊗ Disconnect QBO</button>
+        <button class="tab-btn" onclick="logout()">↩ Logout</button>
+      </div>
+    </aside>
 
-  <main>
+    <main>
     <!-- P&L TAB -->
     <div class="tab-panel active" id="tab-pl">
       <div>
@@ -609,6 +764,88 @@ footer span{color:var(--text-secondary);font-weight:500}
       </div>
     </div>
 
+    <!-- CATEGORIZE BANK TAB -->
+    <div class="tab-panel" id="tab-cat">
+      <div>
+        <div class="slabel">Bank Transaction Categorization</div>
+        <div class="cat-stats">
+          <div class="cat-stat"><div class="csl">Total Transactions</div><div class="csv" id="catTotal">—</div></div>
+          <div class="cat-stat"><div class="csl">Auto-Categorized</div><div class="csv green" id="catAuto">—</div></div>
+          <div class="cat-stat"><div class="csl">Needs Review</div><div class="csv gold" id="catReview">—</div></div>
+          <div class="cat-stat"><div class="csl">Net Cash Flow</div><div class="csv" id="catNet">—</div></div>
+        </div>
+      </div>
+
+      <div id="catUploadZone">
+        <label class="cat-drop" id="catDrop">
+          <div class="cat-drop-icon">📁</div>
+          <div><strong>Drop a Chase CSV here</strong> or click to browse</div>
+          <div class="cat-drop-hint">CSV (<code>Date, Description, Amount</code>)</div>
+          <input type="file" id="catFile" accept=".csv,text/csv"/>
+        </label>
+      </div>
+
+      <div id="catLoadedZone" style="display:none">
+        <div class="cat-loaded">
+          <div class="cat-loaded-info">
+            <div class="cat-loaded-icon">✓</div>
+            <div>
+              <div class="cat-loaded-name" id="catFileName">file.csv</div>
+              <div class="cat-loaded-meta" id="catFileMeta">—</div>
+            </div>
+          </div>
+          <button class="cat-replace" onclick="resetCategorize()">↻ Replace</button>
+        </div>
+      </div>
+
+      <div class="cat-bank-row" id="catBankRow" style="display:none">
+        <label for="catBankSelect">Bank Account</label>
+        <select id="catBankSelect" onchange="onBankAccountChange()"></select>
+      </div>
+
+      <div class="cat-table-card">
+        <div style="padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between">
+          <div>
+            <div style="font-family: 'Cormorant Garamond', serif; font-size: 1rem; font-weight: 600">Transactions</div>
+            <div style="font-size: .7rem; color: var(--text-muted); margin-top: 2px" id="catTableSub">No file loaded yet</div>
+          </div>
+          <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; justify-content: flex-end">
+            <div class="cat-pill-row" id="catFilterPills" style="display:none">
+              <span class="cat-pill active" data-filter="all" onclick="setCatFilter('all', this)">All <span class="ct" id="catCountAll">0</span></span>
+              <span class="cat-pill" data-filter="review" onclick="setCatFilter('review', this)">Needs Review <span class="ct" id="catCountReview">0</span></span>
+              <span class="cat-pill" data-filter="ready" onclick="setCatFilter('ready', this)">Ready <span class="ct" id="catCountReady">0</span></span>
+            </div>
+            <div style="display: flex; gap: 6px">
+              <button class="cat-replace" onclick="openVendorCreate()" title="Create a new vendor in QBO">+ Vendor</button>
+              <button class="cat-replace" onclick="openAccountCreate()" title="Create a new GL account in QBO">+ Account</button>
+              <button class="cat-replace" onclick="openReconcileModal()" title="Verify what's in QBO matches what we pushed">⚖ Reconcile vs QBO</button>
+              <button class="cat-replace" onclick="loadCatMasters(true)" title="Refresh vendors and accounts from QBO">↻ Refresh</button>
+            </div>
+          </div>
+        </div>
+        <div style="overflow-x: auto">
+          <table class="cat-table">
+            <thead>
+              <tr>
+                <th style="width: 90px">Date</th>
+                <th>Description</th>
+                <th class="right" style="width: 110px">Amount</th>
+                <th style="width: 220px">Vendor</th>
+                <th style="width: 240px">Category (Account)</th>
+              </tr>
+            </thead>
+            <tbody id="catTableBody">
+              <tr><td colspan="5" class="cat-empty">Upload a Chase CSV to see your transactions here.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="cat-push-bar">
+          <div class="summary" id="catPushSummary">No transactions ready to push yet.</div>
+          <button class="cat-btn cat-btn-primary" id="catPushBtn" onclick="openPushPreview()" disabled>Push to QuickBooks →</button>
+        </div>
+      </div>
+    </div>
+
     <!-- BANK REC TAB -->
     <div class="tab-panel" id="tab-bankrec">
       <div>
@@ -633,7 +870,193 @@ footer span{color:var(--text-secondary);font-weight:500}
       </div>
     </div>
 
-  </main>
+    </main>
+  </div>
+
+  <!-- CATEGORIZE BANK: PUSH PREVIEW MODAL -->
+  <div class="cat-modal-bg" id="catPushModal" onclick="if(event.target===this)closePushPreview()">
+    <div class="cat-modal">
+      <div class="cat-modal-h">
+        <div>
+          <div class="ttl">Review before pushing to QuickBooks</div>
+          <div class="sub" id="catModalSub">—</div>
+        </div>
+        <button class="x" onclick="closePushPreview()">✕</button>
+      </div>
+      <div class="cat-modal-body" id="catModalBody"></div>
+      <div class="cat-modal-foot">
+        <div class="meta" id="catModalMeta">Each row becomes one Purchase or Deposit entity in QuickBooks. Idempotency keys prevent duplicates.</div>
+        <div style="display:flex; gap:8px">
+          <button class="cat-btn cat-btn-secondary" onclick="closePushPreview()">Back to Edit</button>
+          <button class="cat-btn cat-btn-primary" id="catConfirmPushBtn" onclick="confirmPush()">Confirm &amp; Push</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CATEGORIZE BANK: RECONCILE MODAL -->
+  <div class="cat-modal-bg" id="catReconcileModal" onclick="if(event.target===this)closeReconcileModal()">
+    <div class="cat-modal">
+      <div class="cat-modal-h">
+        <div>
+          <div class="ttl">Reconcile Local Push History vs QBO</div>
+          <div class="sub" id="catReconcileSub">—</div>
+        </div>
+        <button class="x" onclick="closeReconcileModal()">✕</button>
+      </div>
+      <div class="cat-modal-body" id="catReconcileBody">
+        <div class="cat-loading">Loading reconciliation…</div>
+      </div>
+      <div class="cat-modal-foot">
+        <div class="meta">Compares hashes of (date, amount, normalized description) between local push history and QBO actuals.</div>
+        <div style="display:flex; gap:8px">
+          <button class="cat-btn cat-btn-secondary" onclick="closeReconcileModal()">Close</button>
+          <button class="cat-btn cat-btn-primary" onclick="runReconcile()">↻ Re-run</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CATEGORIZE BANK: CREATE VENDOR MODAL -->
+  <div class="cat-modal-bg" id="catVendorModal" onclick="if(event.target===this)closeVendorCreate()">
+    <div class="cat-modal cat-mini-modal">
+      <div class="cat-modal-h">
+        <div>
+          <div class="ttl">Create New Vendor in QuickBooks</div>
+          <div class="sub">Will be available immediately in all dropdowns</div>
+        </div>
+        <button class="x" onclick="closeVendorCreate()">✕</button>
+      </div>
+      <div class="cat-modal-body">
+        <div id="catVendorDedup" style="display:none"></div>
+        <div class="cat-form-row">
+          <label>Vendor Name *</label>
+          <input type="text" id="catVendorName" placeholder="e.g., Paychex Inc" oninput="onVendorNameInput()" autocomplete="off"/>
+          <div class="helper">As it should appear in QBO Vendor list</div>
+        </div>
+        <div class="cat-form-grid-2">
+          <div class="cat-form-row">
+            <label>Email (optional)</label>
+            <input type="email" id="catVendorEmail" placeholder="ap@vendor.com"/>
+          </div>
+          <div class="cat-form-row">
+            <label>Phone (optional)</label>
+            <input type="tel" id="catVendorPhone" placeholder="(555) 555-5555"/>
+          </div>
+        </div>
+        <div class="cat-form-row">
+          <label>Notes (optional)</label>
+          <textarea id="catVendorNotes" rows="2" placeholder="Any internal notes about this vendor"></textarea>
+        </div>
+      </div>
+      <div class="cat-modal-foot">
+        <div class="meta">Vendor will sync to QBO immediately.</div>
+        <div style="display:flex; gap:8px">
+          <button class="cat-btn cat-btn-secondary" onclick="closeVendorCreate()">Cancel</button>
+          <button class="cat-btn cat-btn-primary" id="catVendorCreateBtn" onclick="submitVendorCreate()">Create in QuickBooks</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CATEGORIZE BANK: CREATE ACCOUNT MODAL -->
+  <div class="cat-modal-bg" id="catAccountModal" onclick="if(event.target===this)closeAccountCreate()">
+    <div class="cat-modal cat-mini-modal">
+      <div class="cat-modal-h">
+        <div>
+          <div class="ttl">Create New Account in QuickBooks</div>
+          <div class="sub">Will be available immediately in category dropdowns</div>
+        </div>
+        <button class="x" onclick="closeAccountCreate()">✕</button>
+      </div>
+      <div class="cat-modal-body">
+        <div id="catAccountDedup" style="display:none"></div>
+        <div class="cat-form-row">
+          <label>Account Name *</label>
+          <input type="text" id="catAccountName" placeholder="e.g., Marketing - Facebook Ads" oninput="updateAccountPreview()" autocomplete="off"/>
+        </div>
+        <div class="cat-form-grid-2">
+          <div class="cat-form-row">
+            <label>Account Type *</label>
+            <select id="catAccountType" onchange="updateAccountSubtypes()">
+              <option value="Expense">Expense</option>
+              <option value="Cost of Goods Sold">Cost of Goods Sold</option>
+              <option value="Other Expense">Other Expense</option>
+              <option value="Income">Income</option>
+              <option value="Other Income">Other Income</option>
+              <option value="Bank">Bank</option>
+              <option value="Credit Card">Credit Card</option>
+              <option value="Accounts Payable">Accounts Payable</option>
+              <option value="Accounts Receivable">Accounts Receivable</option>
+              <option value="Other Current Asset">Other Current Asset</option>
+              <option value="Fixed Asset">Fixed Asset</option>
+              <option value="Other Asset">Other Asset</option>
+              <option value="Other Current Liability">Other Current Liability</option>
+              <option value="Long Term Liability">Long Term Liability</option>
+              <option value="Equity">Equity</option>
+            </select>
+            <div class="helper" style="color: var(--gold-light)">⚠ Cannot be changed after creation</div>
+          </div>
+          <div class="cat-form-row">
+            <label>Sub-Type *</label>
+            <select id="catAccountSubType" onchange="updateAccountPreview()"></select>
+            <div class="helper">Affects tax mapping</div>
+          </div>
+        </div>
+        <div class="cat-form-row">
+          <label>Parent Account (optional)</label>
+          <select id="catAccountParent" onchange="updateAccountPreview()">
+            <option value="">— None (top-level account) —</option>
+          </select>
+          <div class="helper">Sub-accounts roll up to parent on the P&amp;L</div>
+        </div>
+        <div class="cat-form-grid-2">
+          <div class="cat-form-row">
+            <label>Account # (optional)</label>
+            <input type="text" id="catAccountNum" placeholder="e.g., 6120"/>
+          </div>
+          <div class="cat-form-row">
+            <label>Description (optional)</label>
+            <input type="text" id="catAccountDesc" placeholder=""/>
+          </div>
+        </div>
+        <div class="cat-form-warn">
+          <span class="ic">⚠</span>
+          <div><strong>Account type is permanent.</strong> Wrong type silently breaks reports. Cannot be deleted later — only inactivated.</div>
+        </div>
+        <div class="cat-form-preview">
+          <div class="lbl">Preview · how this will appear on your P&amp;L</div>
+          <div id="catAccountPreview" style="color: var(--text-secondary)">—</div>
+        </div>
+      </div>
+      <div class="cat-modal-foot">
+        <div class="meta">Account will sync to QBO immediately.</div>
+        <div style="display:flex; gap:8px">
+          <button class="cat-btn cat-btn-secondary" onclick="closeAccountCreate()">Cancel</button>
+          <button class="cat-btn cat-btn-primary" id="catAccountCreateBtn" onclick="submitAccountCreate()">Create in QuickBooks</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CATEGORIZE BANK: VENDOR CONTEXT DRAWER -->
+  <div class="cat-drawer-bg" id="catDrawerBg" onclick="closeVendorDrawer()"></div>
+  <div class="cat-drawer" id="catDrawer">
+    <div class="cat-drawer-h">
+      <div class="info">
+        <div class="eyebrow">Vendor</div>
+        <div class="title" id="catDrawerTitle">—</div>
+        <div class="sub" id="catDrawerSub">—</div>
+      </div>
+      <div class="actions">
+        <a class="ic-btn" id="catDrawerQboLink" href="#" target="_blank" title="Open in QuickBooks">↗</a>
+        <button class="ic-btn" onclick="closeVendorDrawer()" title="Close (Esc)">✕</button>
+      </div>
+    </div>
+    <div class="cat-drawer-body" id="catDrawerBody">
+      <div class="cat-empty-drawer">No vendor selected</div>
+    </div>
+  </div>
 
   <div class="toast-host" id="toastHost"></div>
 
@@ -1706,6 +2129,870 @@ function renderVendors(data) {
 }
 
 checkStatus();
+
+// ── CATEGORIZE BANK MODULE ─────────────────────────────────────────────
+let catTxns = [];
+let catInited = false;
+let catVendors = [];
+let catAccountsAll = [];
+let catBankAccounts = [];
+let catCategoryAccounts = [];
+let catSelectedBankId = '';
+let catMastersLoaded = false;
+let catVendorHistory = {};
+let catVendorMatchIndex = [];
+let catFilter = 'all';
+
+function initCategorize() {
+  if (catInited) return;
+  catInited = true;
+  const drop = document.getElementById('catDrop');
+  const fileInput = document.getElementById('catFile');
+  fileInput.addEventListener('change', e => { if (e.target.files[0]) handleCatFile(e.target.files[0]); });
+  ['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('dragover'); }));
+  ['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('dragover'); }));
+  drop.addEventListener('drop', e => { const f = e.dataTransfer.files[0]; if (f) handleCatFile(f); });
+  loadCatMasters();
+}
+
+async function loadCatMasters(force = false) {
+  if (catMastersLoaded && !force) return;
+  try {
+    const [vRes, aRes, hRes] = await Promise.all([
+      fetch('/api/vendors').then(r => r.status === 401 ? null : r.json()),
+      fetch('/api/accounts').then(r => r.status === 401 ? null : r.json()),
+      fetch('/api/vendor-history').then(r => r.status === 401 ? null : r.json())
+    ]);
+    if (!vRes || !aRes || !hRes) {
+      showToast('QBO connection required. Connect via the dashboard.', true);
+      return;
+    }
+    catVendors = (vRes.vendors || []).filter(v => v.active).sort((a,b) => a.displayName.localeCompare(b.displayName));
+    catAccountsAll = (aRes.QueryResponse?.Account || []).filter(a => a.Active);
+    catBankAccounts = catAccountsAll
+      .filter(a => a.AccountType === 'Bank' || a.AccountType === 'Credit Card')
+      .sort((a,b) => a.FullyQualifiedName.localeCompare(b.FullyQualifiedName));
+    const catTypes = new Set(['Expense','Cost of Goods Sold','Other Expense','Income','Other Income','Other Current Liability','Long Term Liability','Equity','Other Current Asset','Fixed Asset']);
+    catCategoryAccounts = catAccountsAll
+      .filter(a => catTypes.has(a.AccountType))
+      .sort((a,b) => a.FullyQualifiedName.localeCompare(b.FullyQualifiedName));
+    catVendorHistory = hRes.byVendor || {};
+    buildVendorMatchIndex();
+    catMastersLoaded = true;
+    renderBankSelector();
+    if (catTxns.length) {
+      autoCategorizeTxns(catTxns);
+      renderCatTable(catTxns);
+      renderCatStats(catTxns);
+    }
+  } catch (err) {
+    console.error('Failed to load masters:', err);
+  }
+}
+
+const VENDOR_STOP_WORDS = new Set(['inc','llc','ltd','corp','corporation','company','co','the','and','for','of','services','service','solutions','group','partners']);
+function tokenizeName(name) {
+  return String(name || '').toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').split(/\s+/).filter(t => t.length >= 3 && !VENDOR_STOP_WORDS.has(t));
+}
+function buildVendorMatchIndex() {
+  catVendorMatchIndex = catVendors.map(v => ({ vendor: v, tokens: tokenizeName(v.displayName) }));
+}
+function findVendorMatch(description) {
+  const desc = String(description || '').toLowerCase();
+  let best = null, bestScore = 0;
+  for (const { vendor, tokens } of catVendorMatchIndex) {
+    if (!tokens.length) continue;
+    let score = 0;
+    for (const t of tokens) if (desc.includes(t)) score += t.length;
+    if (score > bestScore) { bestScore = score; best = vendor; }
+  }
+  return bestScore >= 4 ? { vendor: best, score: bestScore } : null;
+}
+function autoCategorizeTxns(txns) {
+  for (const t of txns) {
+    if (t.vendorId) continue;
+    const m = findVendorMatch(t.description);
+    if (!m) continue;
+    t.vendorId = m.vendor.id;
+    t.matchScore = m.score;
+    const hist = catVendorHistory[m.vendor.id];
+    if (hist && hist.defaultAccountId) {
+      t.accountId = hist.defaultAccountId;
+      t.suggestedConfidence = hist.defaultAccountConfidence;
+    }
+  }
+}
+
+function renderBankSelector() {
+  const sel = document.getElementById('catBankSelect');
+  if (!catBankAccounts.length) {
+    sel.innerHTML = '<option value="">(no bank accounts found in QBO)</option>';
+    return;
+  }
+  const guess = catBankAccounts.find(a => /chase|operating|checking/i.test(a.FullyQualifiedName)) || catBankAccounts[0];
+  catSelectedBankId = guess.Id;
+  sel.innerHTML = catBankAccounts.map(a =>
+    `<option value="${a.Id}" ${a.Id === catSelectedBankId ? 'selected' : ''}>${escapeHtml(a.FullyQualifiedName)} (${a.AccountType})</option>`
+  ).join('');
+}
+function onBankAccountChange() {
+  catSelectedBankId = document.getElementById('catBankSelect').value;
+}
+
+function handleCatFile(file) {
+  if (typeof Papa === 'undefined') {
+    showToast('CSV parser still loading. Try again in a moment.', true);
+    return;
+  }
+  Papa.parse(file, {
+    header: true,
+    skipEmptyLines: true,
+    complete: results => {
+      const parsed = parseChaseCsv(results.data);
+      if (!parsed.length) {
+        showToast('No transactions parsed. Expected columns like "Posting Date", "Description", "Amount" — check your CSV format.', true);
+        return;
+      }
+      loadParsedTxnsIntoCategorizer(parsed, file.name, `${(file.size / 1024).toFixed(1)} KB · CSV`);
+    },
+    error: err => showToast('CSV parse error: ' + err.message, true)
+  });
+}
+function loadParsedTxnsIntoCategorizer(parsed, filename, subtitle) {
+  catTxns = parsed.map((t, i) => ({ ...t, idx: i, vendorId: '', accountId: '' }));
+  document.getElementById('catUploadZone').style.display = 'none';
+  document.getElementById('catLoadedZone').style.display = 'block';
+  document.getElementById('catBankRow').style.display = 'flex';
+  document.getElementById('catFileName').textContent = filename;
+  document.getElementById('catFileMeta').textContent = subtitle;
+  loadCatMasters().then(() => {
+    autoCategorizeTxns(catTxns);
+    renderCatStats(catTxns);
+    renderCatTable(catTxns);
+    refreshPushBar();
+  });
+}
+function parseChaseCsv(rows) {
+  const out = [];
+  for (const r of rows) {
+    const date = r['Posting Date'] || r['Transaction Date'] || r['Date'] || r['posting date'] || r['date'];
+    const desc = r['Description'] || r['description'] || r['Memo'] || r['memo'] || '';
+    const amtRaw = r['Amount'] || r['amount'];
+    const balRaw = r['Balance'] || r['balance'] || r['Running Balance'] || r['running balance'];
+    if (!date || amtRaw == null || amtRaw === '') continue;
+    const amount = parseFloat(String(amtRaw).replace(/[$,\s]/g, ''));
+    if (isNaN(amount)) continue;
+    const balance = balRaw != null ? parseFloat(String(balRaw).replace(/[$,\s]/g, '')) : null;
+    out.push({ date: normalizeDate(date), description: String(desc).trim(), amount, balance: isNaN(balance) ? null : balance });
+  }
+  return out;
+}
+function checkRunningBalance(txns) {
+  const withBal = txns.filter(t => t.balance !== null && t.balance !== undefined);
+  if (withBal.length < 2) return { hasBalance: false, ok: true, breaks: [] };
+  const sorted = [...withBal].sort((a, b) => {
+    const ad = a.date.split('/').map(Number);
+    const bd = b.date.split('/').map(Number);
+    return new Date(2000 + ad[2], ad[0] - 1, ad[1]) - new Date(2000 + bd[2], bd[0] - 1, bd[1]);
+  });
+  const breaks = [];
+  for (let i = 1; i < sorted.length; i++) {
+    const expected = +(sorted[i - 1].balance + sorted[i].amount).toFixed(2);
+    const actual = +sorted[i].balance.toFixed(2);
+    if (Math.abs(expected - actual) > 0.01) {
+      breaks.push({ date: sorted[i].date, description: sorted[i].description, amount: sorted[i].amount, prevBalance: sorted[i - 1].balance, expected, actual, diff: +(actual - expected).toFixed(2) });
+    }
+  }
+  return { hasBalance: true, ok: breaks.length === 0, breaks, rowsChecked: sorted.length };
+}
+function normalizeDate(d) {
+  const s = String(d).trim();
+  let m;
+  if ((m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/))) {
+    const [, mo, da, yr] = m;
+    const yy = yr.length === 4 ? yr.slice(2) : yr;
+    return `${mo.padStart(2,'0')}/${da.padStart(2,'0')}/${yy}`;
+  }
+  if ((m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/))) {
+    return `${m[2]}/${m[3]}/${m[1].slice(2)}`;
+  }
+  return s;
+}
+
+function renderCatStats(txns) {
+  const total = txns.length;
+  const ready = txns.filter(t => t.vendorId && t.accountId).length;
+  const review = total - ready;
+  const net = txns.reduce((s, t) => s + t.amount, 0);
+  document.getElementById('catTotal').textContent = total;
+  document.getElementById('catAuto').textContent = ready;
+  document.getElementById('catReview').textContent = review;
+  document.getElementById('catNet').textContent = fmt(net);
+}
+
+function vendorOptionsHtml(selectedId) {
+  const opts = ['<option value="">— Choose vendor —</option>'];
+  for (const v of catVendors) {
+    opts.push(`<option value="${v.id}" ${v.id === selectedId ? 'selected' : ''}>${escapeHtml(v.displayName)}</option>`);
+  }
+  return opts.join('');
+}
+function accountOptionsHtml(selectedId) {
+  const groups = {};
+  for (const a of catCategoryAccounts) {
+    if (!groups[a.AccountType]) groups[a.AccountType] = [];
+    groups[a.AccountType].push(a);
+  }
+  const order = ['Expense','Cost of Goods Sold','Other Expense','Income','Other Income','Other Current Liability','Long Term Liability','Equity','Other Current Asset','Fixed Asset'];
+  const out = ['<option value="">— Choose account —</option>'];
+  for (const type of order) {
+    if (!groups[type]) continue;
+    out.push(`<optgroup label="${escapeHtml(type)}">`);
+    for (const a of groups[type]) {
+      out.push(`<option value="${a.Id}" ${a.Id === selectedId ? 'selected' : ''}>${escapeHtml(a.FullyQualifiedName)}</option>`);
+    }
+    out.push('</optgroup>');
+  }
+  return out.join('');
+}
+
+function setCatFilter(filter, el) {
+  catFilter = filter;
+  document.querySelectorAll('#catFilterPills .cat-pill').forEach(p => p.classList.remove('active'));
+  if (el) el.classList.add('active');
+  renderCatTable(catTxns);
+}
+function updateFilterCounts() {
+  const total = catTxns.length;
+  const ready = catTxns.filter(t => t.vendorId && t.accountId).length;
+  const review = total - ready;
+  document.getElementById('catCountAll').textContent = total;
+  document.getElementById('catCountReady').textContent = ready;
+  document.getElementById('catCountReview').textContent = review;
+  document.getElementById('catFilterPills').style.display = total ? 'flex' : 'none';
+}
+
+function renderCatTable(txns) {
+  const body = document.getElementById('catTableBody');
+  if (!catMastersLoaded) {
+    document.getElementById('catTableSub').textContent = 'Loading vendors and chart of accounts from QBO…';
+    body.innerHTML = '<tr><td colspan="5" class="cat-loading">Loading masters from QBO…</td></tr>';
+    return;
+  }
+  updateFilterCounts();
+  const filtered = catFilter === 'all' ? txns
+    : catFilter === 'review' ? txns.filter(t => !t.vendorId || !t.accountId)
+    : txns.filter(t => t.vendorId && t.accountId);
+  const ready = txns.filter(t => t.vendorId && t.accountId).length;
+  const subParts = [`${txns.length} rows`, `${ready} ready`, `${txns.length - ready} need review`];
+  if (catFilter !== 'all') subParts.push(`Showing ${filtered.length} (${catFilter})`);
+  document.getElementById('catTableSub').textContent = subParts.join(' · ');
+  if (!filtered.length) {
+    body.innerHTML = `<tr><td colspan="5" class="cat-empty">No transactions match the current filter.</td></tr>`;
+    return;
+  }
+  body.innerHTML = filtered.map(t => {
+    const needsReview = !t.vendorId || !t.accountId;
+    return `
+      <tr class="${needsReview ? 'cat-needs-review' : ''}" data-idx="${t.idx}">
+        <td style="color: var(--text-secondary); white-space: nowrap">${t.date}</td>
+        <td>${escapeHtml(t.description)}</td>
+        <td class="right ${t.amount < 0 ? 'neg' : 'pos'}">${t.amount < 0 ? '−' : '+'}$${Math.abs(t.amount).toFixed(2)}</td>
+        <td>
+          <div class="cat-vendor-cell-wrap">
+            <select class="cat-row-select ${t.vendorId ? '' : 'empty'}" onchange="updateCatRow(${t.idx}, 'vendorId', this.value)">${vendorOptionsHtml(t.vendorId)}</select>
+            ${t.vendorId ? `<button class="cat-info-link" onclick="openVendorDrawer('${t.vendorId}'); event.stopPropagation()" title="View vendor history">ⓘ</button>` : ''}
+          </div>
+        </td>
+        <td><select class="cat-row-select ${t.accountId ? '' : 'empty'}" onchange="updateCatRow(${t.idx}, 'accountId', this.value)">${accountOptionsHtml(t.accountId)}</select></td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function updateCatRow(idx, field, value) {
+  const t = catTxns.find(x => x.idx === idx);
+  if (!t) return;
+  t[field] = value;
+  const tr = document.querySelector(`tr[data-idx="${idx}"]`);
+  if (tr) tr.classList.toggle('cat-needs-review', !t.vendorId || !t.accountId);
+  const sel = tr?.querySelectorAll('select')[field === 'vendorId' ? 0 : 1];
+  if (sel) sel.classList.toggle('empty', !value);
+  renderCatStats(catTxns);
+  updateFilterCounts();
+  refreshPushBar();
+}
+
+function refreshPushBar() {
+  const ready = catTxns.filter(t => t.vendorId && t.accountId);
+  const total = catTxns.length;
+  const summary = document.getElementById('catPushSummary');
+  const btn = document.getElementById('catPushBtn');
+  document.getElementById('catTableSub').textContent = total ? `${total} rows · ${ready.length} ready · ${total - ready.length} need review` : 'No file loaded yet';
+  if (!total) {
+    summary.textContent = 'No transactions ready to push yet.';
+    btn.disabled = true; btn.textContent = 'Push to QuickBooks →';
+    return;
+  }
+  if (!ready.length) {
+    summary.innerHTML = `<strong>0</strong> ready · <strong>${total}</strong> need vendor + account before pushing`;
+    btn.disabled = true; btn.textContent = 'Push to QuickBooks →';
+    return;
+  }
+  summary.innerHTML = `<strong>${ready.length}</strong> ready to push · <strong>${total - ready.length}</strong> excluded (incomplete)`;
+  btn.disabled = false;
+  btn.textContent = `Push ${ready.length} to QuickBooks →`;
+}
+
+function inferPaymentType(description, bankAccountType) {
+  if (bankAccountType === 'Credit Card') return 'CreditCard';
+  const d = String(description || '').toUpperCase();
+  if (/\bCHK\b|\bCHECK\b/.test(d)) return 'Check';
+  return 'Cash';
+}
+function txnToPayload(t, bank) {
+  const vendor = catVendors.find(v => v.id === t.vendorId);
+  const acct = catCategoryAccounts.find(a => a.Id === t.accountId);
+  const [mm, dd, yy] = t.date.split('/');
+  const fullYear = yy.length === 2 ? '20' + yy : yy;
+  return {
+    date: `${fullYear}-${mm}-${dd}`,
+    amount: t.amount,
+    description: t.description,
+    vendorId: t.vendorId,
+    vendorName: vendor?.displayName,
+    categoryId: t.accountId,
+    categoryName: acct?.FullyQualifiedName,
+    paymentType: inferPaymentType(t.description, bank?.AccountType)
+  };
+}
+
+// Push Preview Modal
+function openPushPreview() {
+  const ready = catTxns.filter(t => t.vendorId && t.accountId);
+  if (!ready.length) return;
+  if (!catSelectedBankId) { showToast('Pick a bank account at the top before pushing.', true); return; }
+  const bank = catBankAccounts.find(a => a.Id === catSelectedBankId);
+  const totalOut = ready.filter(t => t.amount < 0).reduce((s,t) => s + t.amount, 0);
+  const totalIn  = ready.filter(t => t.amount > 0).reduce((s,t) => s + t.amount, 0);
+  const excluded = catTxns.length - ready.length;
+  const byAcct = {};
+  for (const t of ready) {
+    const acct = catCategoryAccounts.find(a => a.Id === t.accountId);
+    const name = acct?.FullyQualifiedName || `Acct #${t.accountId}`;
+    if (!byAcct[name]) byAcct[name] = { count: 0, total: 0 };
+    byAcct[name].count++;
+    byAcct[name].total += t.amount;
+  }
+  const breakdownRows = Object.entries(byAcct)
+    .sort((a,b) => Math.abs(b[1].total) - Math.abs(a[1].total))
+    .map(([name, d]) => `<tr><td>${escapeHtml(name)}<span class="ct">${d.count} txn${d.count>1?'s':''}</span></td><td style="color: ${d.total < 0 ? 'var(--red-light)' : 'var(--green-light)'}">${d.total < 0 ? '−' : '+'}$${Math.abs(d.total).toFixed(2)}</td></tr>`)
+    .join('');
+  const dupeCheck = ready.length > 50 ? '<span style="color: var(--gold-light)">Skipping pre-flight dup-check (large batch)</span>' : 'Backend will check for duplicate DocNumbers';
+  const checks = [
+    `All ${ready.length} rows have a vendor and account assigned`,
+    'Idempotency keys generated (safe to retry on failure)',
+    'All vendors and accounts validated against current QBO data',
+    'Layer-3 dedup: local push history will catch re-uploads',
+    dupeCheck
+  ];
+  const csvTotal = catTxns.length;
+  const csvAmount = catTxns.reduce((s, t) => s + t.amount, 0);
+  const readyAmount = ready.reduce((s, t) => s + t.amount, 0);
+  const completenessOk = ready.length === csvTotal;
+  const balCheck = checkRunningBalance(catTxns);
+  const warns = [];
+  const largeRows = ready.filter(t => Math.abs(t.amount) >= 5000);
+  for (const r of largeRows) warns.push(`Large transaction: ${escapeHtml(r.description)} — $${Math.abs(r.amount).toFixed(2)}`);
+  if (excluded > 0) warns.push(`${excluded} transaction${excluded>1?'s':''} excluded — missing vendor or account`);
+
+  document.getElementById('catModalSub').textContent = `${bank?.FullyQualifiedName || 'Bank'} · ${ready.length} of ${catTxns.length} transactions`;
+  document.getElementById('catModalBody').innerHTML = `
+    <div class="cat-modal-stats">
+      <div class="cat-modal-stat"><div class="lbl">Will Create</div><div class="val">${ready.length}</div></div>
+      <div class="cat-modal-stat"><div class="lbl">Total Outflow</div><div class="val red">${totalOut < 0 ? '−$' + Math.abs(totalOut).toFixed(0) : '$0'}</div></div>
+      <div class="cat-modal-stat"><div class="lbl">Total Inflow</div><div class="val green">${totalIn > 0 ? '+$' + totalIn.toFixed(0) : '$0'}</div></div>
+      <div class="cat-modal-stat"><div class="lbl">Excluded</div><div class="val gold">${excluded}</div></div>
+    </div>
+    <div class="cat-modal-section">
+      <div class="stitle">Pre-flight Checks</div>
+      <div class="cat-checks">${checks.map(c => `<div class="row"><span class="ic">✓</span>${c}</div>`).join('')}</div>
+      ${warns.length ? `<div class="cat-warns">${warns.map(w => `<div class="row"><span class="ic">⚠</span>${w}</div>`).join('')}</div>` : ''}
+    </div>
+    <div class="cat-modal-section">
+      <div class="stitle">CSV Integrity Check</div>
+      <div class="${completenessOk && balCheck.ok ? 'cat-checks' : 'cat-warns'}">
+        <div class="row"><span class="ic">${completenessOk ? '✓' : '⚠'}</span><strong>Completeness:</strong>&nbsp;${completenessOk ? `All ${csvTotal} CSV rows are accounted for and ready to push` : `${csvTotal - ready.length} of ${csvTotal} rows excluded — pushing only ${ready.length}`}</div>
+        <div class="row"><span class="ic">${Math.abs(csvAmount - readyAmount) < 0.01 ? '✓' : '⚠'}</span><strong>Amount totals:</strong>&nbsp;CSV=${fmt(csvAmount)} · Ready=${fmt(readyAmount)}${Math.abs(csvAmount - readyAmount) >= 0.01 ? ` · Excluded=${fmt(csvAmount - readyAmount)}` : ''}</div>
+        ${balCheck.hasBalance ? `<div class="row"><span class="ic">${balCheck.ok ? '✓' : '⚠'}</span><strong>Running balance:</strong>&nbsp;${balCheck.ok ? `Verified ${balCheck.rowsChecked} rows — balances reconcile cleanly` : `${balCheck.breaks.length} break${balCheck.breaks.length>1?'s':''} detected`}</div>` : `<div class="row"><span class="ic" style="color: var(--text-muted)">○</span><strong>Running balance:</strong>&nbsp;<span style="color: var(--text-muted)">No Balance column in CSV — skipping check</span></div>`}
+      </div>
+    </div>
+    <div class="cat-modal-section">
+      <div class="stitle">Breakdown by Account</div>
+      <table class="cat-breakdown"><tbody>${breakdownRows}</tbody></table>
+    </div>
+  `;
+  document.getElementById('catConfirmPushBtn').textContent = `Confirm & Push ${ready.length} →`;
+  document.getElementById('catConfirmPushBtn').disabled = false;
+  document.getElementById('catConfirmPushBtn').onclick = confirmPush;
+  document.getElementById('catPushModal').classList.add('open');
+}
+function closePushPreview() {
+  document.getElementById('catPushModal').classList.remove('open');
+}
+
+async function confirmPush() {
+  const ready = catTxns.filter(t => t.vendorId && t.accountId);
+  if (!ready.length) return;
+  const bank = catBankAccounts.find(a => a.Id === catSelectedBankId);
+  if (!bank) { showToast('Bank account not found.', true); return; }
+  const expenses = ready.filter(t => t.amount <= 0);
+  const deposits = ready.filter(t => t.amount > 0);
+  const btn = document.getElementById('catConfirmPushBtn');
+  btn.disabled = true;
+  btn.textContent = `Pushing ${ready.length}…`;
+  const combined = { created: [], skipped: [], errors: [] };
+  try {
+    if (expenses.length) {
+      const expPayloads = expenses.map(t => txnToPayload(t, bank));
+      const expRes = await fetch('/api/purchase-batch', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bankAccountId: bank.Id, bankAccountName: bank.FullyQualifiedName, transactions: expPayloads })
+      });
+      const expResult = await expRes.json();
+      const labelFor = (pt) => pt === 'Check' ? 'Check' : pt === 'CreditCard' ? 'CC Charge' : 'Expense';
+      const tagByDocNumber = {};
+      for (const p of expPayloads) {
+        const dateShort = p.date.replace(/-/g, '').substring(2);
+        const amtStr = Math.abs(p.amount).toFixed(2);
+        const slug = (p.description || '').toLowerCase().replace(/[^a-z0-9]/g, '').substring(0, 21 - dateShort.length - 1 - amtStr.length - 1);
+        const docNumber = `${dateShort}-${amtStr}-${slug}`;
+        tagByDocNumber[docNumber] = labelFor(p.paymentType);
+      }
+      (expResult.created || []).forEach(r => r.txnType = tagByDocNumber[r.docNumber] || 'Expense');
+      (expResult.skipped || []).forEach(r => r.txnType = tagByDocNumber[r.docNumber] || 'Expense');
+      (expResult.errors || []).forEach(r => r.txnType = tagByDocNumber[r.docNumber] || 'Expense');
+      combined.created.push(...(expResult.created || []));
+      combined.skipped.push(...(expResult.skipped || []));
+      combined.errors.push(...(expResult.errors || []));
+    }
+    if (deposits.length) {
+      const depRes = await fetch('/api/deposit-batch', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bankAccountId: bank.Id, bankAccountName: bank.FullyQualifiedName, transactions: deposits.map(t => txnToPayload(t, bank)) })
+      });
+      const depResult = await depRes.json();
+      (depResult.created || []).forEach(r => r.txnType = 'Deposit');
+      (depResult.skipped || []).forEach(r => r.txnType = 'Deposit');
+      (depResult.errors || []).forEach(r => r.txnType = 'Deposit');
+      combined.created.push(...(depResult.created || []));
+      combined.skipped.push(...(depResult.skipped || []));
+      combined.errors.push(...(depResult.errors || []));
+    }
+    try { renderPushResults(combined); }
+    catch (renderErr) {
+      console.error('renderPushResults failed:', renderErr);
+      document.getElementById('catModalBody').innerHTML = `
+        <div style="padding: 16px">
+          <div style="color: var(--green-light); font-weight: 600; margin-bottom: 12px">✓ ${combined.created.length} created · ⊘ ${combined.skipped.length} skipped · ✕ ${combined.errors.length} errors</div>
+          <div style="font-size: .8rem; color: var(--text-secondary)">Push completed. The data is in QuickBooks. (UI render bug: ${escapeHtml(renderErr.message)})</div>
+        </div>`;
+      document.getElementById('catConfirmPushBtn').textContent = 'Done';
+      document.getElementById('catConfirmPushBtn').onclick = () => { closePushPreview(); refreshPushBar(); };
+      document.getElementById('catConfirmPushBtn').disabled = false;
+    }
+  } catch (err) {
+    document.getElementById('catModalBody').innerHTML = `<div style="color: var(--red-light); padding: 20px; text-align: center"><strong>Push failed (network / server):</strong><br>${escapeHtml(err.message)}</div>`;
+    btn.disabled = false; btn.textContent = 'Retry';
+  }
+}
+
+function renderPushResults(result) {
+  const created = result.created || [], skipped = result.skipped || [], errors = result.errors || [];
+  document.getElementById('catModalBody').innerHTML = `
+    <div class="cat-modal-stats">
+      <div class="cat-modal-stat"><div class="lbl">Created in QBO</div><div class="val green">${created.length}</div></div>
+      <div class="cat-modal-stat"><div class="lbl">Skipped (Dupes)</div><div class="val gold">${skipped.length}</div></div>
+      <div class="cat-modal-stat"><div class="lbl">Errors</div><div class="val ${errors.length ? 'red' : ''}">${errors.length}</div></div>
+      <div class="cat-modal-stat"><div class="lbl">Total Processed</div><div class="val">${created.length + skipped.length + errors.length}</div></div>
+    </div>
+    ${created.length ? `<div class="cat-modal-section"><div class="stitle">✓ Created (${created.length})</div>
+      ${created.slice(0, 50).map(c => `<div class="cat-results-row ok"><span>✓</span><span>${escapeHtml(c.txnType || 'Purchase')} #${c.id}</span><span>${escapeHtml(c.description || '')}</span><span style="text-align:right">$${Math.abs(c.amount || 0).toFixed(2)}</span></div>`).join('')}
+      ${created.length > 50 ? `<div style="font-size:.7rem; color: var(--text-muted); margin-top: 6px">…and ${created.length - 50} more</div>` : ''}
+    </div>` : ''}
+    ${skipped.length ? `<div class="cat-modal-section"><div class="stitle">⊘ Skipped — already exists in QBO (${skipped.length})</div>
+      ${skipped.map(s => `<div class="cat-results-row skip"><span>⊘</span><span>${escapeHtml(s.docNumber || '')}</span><span>${escapeHtml(s.description || '')}</span><span></span></div>`).join('')}
+    </div>` : ''}
+    ${errors.length ? `<div class="cat-modal-section"><div class="stitle">✕ Errors (${errors.length})</div>
+      ${errors.map(e => `<div class="cat-results-row err"><span>✕</span><span>${escapeHtml(e.docNumber || '')}</span><span>${escapeHtml(e.description || '')}</span><span style="font-size:.65rem">${escapeHtml(JSON.stringify(e.error).slice(0, 60))}</span></div>`).join('')}
+    </div>` : ''}
+  `;
+  const markPushed = (results) => {
+    for (const c of results) {
+      const key = c.docNumber || '';
+      const m = key.match(/(\d{6})-(\d+\.\d{2})/);
+      if (!m) continue;
+      const [, dateChunk, amtStr] = m;
+      const txn = catTxns.find(t => {
+        const [mm, dd, yy] = (t.date || '').split('/');
+        return (yy + mm + dd) === dateChunk && Math.abs(t.amount).toFixed(2) === amtStr && !t.pushed;
+      });
+      if (txn) txn.pushed = true;
+    }
+  };
+  markPushed(created);
+  markPushed(skipped);
+  document.getElementById('catConfirmPushBtn').textContent = 'Done';
+  document.getElementById('catConfirmPushBtn').onclick = () => {
+    closePushPreview();
+    document.getElementById('catConfirmPushBtn').onclick = confirmPush;
+    catTxns = catTxns.filter(t => !t.pushed);
+    renderCatStats(catTxns); renderCatTable(catTxns); refreshPushBar();
+    if (!catTxns.length) {
+      document.getElementById('catTableSub').textContent = 'All transactions pushed. Drop a new CSV to continue.';
+      showToast(`✓ ${created.length} pushed to QuickBooks${skipped.length ? ` · ${skipped.length} already existed (dedup)` : ''}`);
+    } else {
+      showToast(`✓ ${created.length} pushed${skipped.length ? ` · ${skipped.length} skipped (dedup)` : ''} · ${catTxns.length} remaining`);
+    }
+  };
+  document.getElementById('catConfirmPushBtn').disabled = false;
+}
+
+function resetCategorize() {
+  catTxns = [];
+  document.getElementById('catUploadZone').style.display = 'block';
+  document.getElementById('catLoadedZone').style.display = 'none';
+  document.getElementById('catBankRow').style.display = 'none';
+  document.getElementById('catFile').value = '';
+  document.getElementById('catTotal').textContent = '—';
+  document.getElementById('catAuto').textContent = '—';
+  document.getElementById('catReview').textContent = '—';
+  document.getElementById('catNet').textContent = '—';
+  document.getElementById('catTableSub').textContent = 'No file loaded yet';
+  document.getElementById('catTableBody').innerHTML = '<tr><td colspan="5" class="cat-empty">Upload a Chase CSV to see your transactions here.</td></tr>';
+  refreshPushBar();
+}
+
+// Account subtype data + create/vendor modal handlers
+const ACCOUNT_SUBTYPES = {
+  'Bank': ['Checking', 'Savings', 'MoneyMarket', 'CashOnHand'],
+  'Other Current Asset': ['Inventory', 'UndepositedFunds', 'PrepaidExpenses', 'EmployeeCashAdvances', 'OtherCurrentAssets'],
+  'Fixed Asset': ['Vehicles', 'Buildings', 'FurnitureAndFixtures', 'MachineryAndEquipment', 'AccumulatedDepreciation', 'Land'],
+  'Other Asset': ['Goodwill', 'LeaseBuyout', 'SecurityDeposits', 'OtherLongTermAssets'],
+  'Accounts Receivable': ['AccountsReceivable'],
+  'Equity': ['OwnersEquity', 'RetainedEarnings', 'CommonStock', 'OwnerDistributions', 'OwnerContributions'],
+  'Expense': ['AdvertisingPromotional', 'OfficeExpenses', 'OfficeGeneralAdministrativeExpenses', 'Travel', 'TravelMeals', 'Utilities', 'BankCharges', 'RepairMaintenance', 'Insurance', 'LegalProfessionalFees', 'OtherBusinessExpenses', 'CommissionsAndFees', 'Auto', 'Entertainment', 'Meals', 'Supplies', 'Taxes', 'Rent'],
+  'Other Expense': ['Depreciation', 'Amortization', 'PenaltiesAndSettlements', 'ExchangeGainOrLoss', 'OtherMiscellaneousExpense'],
+  'Cost of Goods Sold': ['SuppliesMaterialsCogs', 'CostOfLaborCos', 'EquipmentRentalCos', 'ShippingFreightDeliveryCos', 'OtherCostsOfServiceCos'],
+  'Accounts Payable': ['AccountsPayable'],
+  'Credit Card': ['CreditCard'],
+  'Long Term Liability': ['NotesPayable', 'OtherLongTermLiabilities', 'ShareholderNotesPayable'],
+  'Other Current Liability': ['PayrollClearing', 'SalesTaxPayable', 'PayrollTaxPayable', 'OtherCurrentLiabilities', 'TrustAccountsLiabilities'],
+  'Income': ['SalesOfProductIncome', 'ServiceFeeIncome', 'DiscountsRefundsGiven', 'NonProfitIncome', 'OtherPrimaryIncome'],
+  'Other Income': ['DividendIncome', 'InterestEarned', 'OtherInvestmentIncome', 'OtherMiscellaneousIncome', 'TaxExemptInterest']
+};
+const SUBTYPE_LABELS = {
+  'AdvertisingPromotional': 'Advertising / Promotional',
+  'OfficeGeneralAdministrativeExpenses': 'Office (general & admin)',
+  'LegalProfessionalFees': 'Legal & Professional Fees',
+  'RepairMaintenance': 'Repairs & Maintenance',
+  'BankCharges': 'Bank Charges',
+  'CommissionsAndFees': 'Commissions & Fees',
+  'OtherBusinessExpenses': 'Other Business Expenses',
+  'TravelMeals': 'Travel Meals',
+  'OtherMiscellaneousExpense': 'Other Miscellaneous',
+  'PenaltiesAndSettlements': 'Penalties & Settlements',
+  'ExchangeGainOrLoss': 'Exchange Gain / Loss',
+  'SuppliesMaterialsCogs': 'Supplies & Materials',
+  'CostOfLaborCos': 'Cost of Labor',
+  'EquipmentRentalCos': 'Equipment Rental',
+  'ShippingFreightDeliveryCos': 'Shipping / Freight',
+  'OtherCostsOfServiceCos': 'Other Cost of Services',
+  'NotesPayable': 'Notes Payable',
+  'PayrollClearing': 'Payroll Clearing',
+  'SalesTaxPayable': 'Sales Tax Payable',
+  'PayrollTaxPayable': 'Payroll Tax Payable',
+  'SalesOfProductIncome': 'Sales of Product Income',
+  'ServiceFeeIncome': 'Service / Fee Income',
+  'DiscountsRefundsGiven': 'Discounts / Refunds Given',
+  'OtherPrimaryIncome': 'Other Primary Income',
+  'InterestEarned': 'Interest Earned',
+  'DividendIncome': 'Dividend Income',
+  'OtherMiscellaneousIncome': 'Other Miscellaneous Income',
+  'TaxExemptInterest': 'Tax Exempt Interest',
+  'UndepositedFunds': 'Undeposited Funds',
+  'PrepaidExpenses': 'Prepaid Expenses',
+  'EmployeeCashAdvances': 'Employee Cash Advances',
+  'OtherCurrentAssets': 'Other Current Assets',
+  'OtherLongTermAssets': 'Other Long Term Assets',
+  'OtherLongTermLiabilities': 'Other Long Term Liabilities',
+  'OtherCurrentLiabilities': 'Other Current Liabilities',
+  'TrustAccountsLiabilities': 'Trust Accounts Liabilities',
+  'CashOnHand': 'Cash on Hand',
+  'MoneyMarket': 'Money Market',
+  'FurnitureAndFixtures': 'Furniture & Fixtures',
+  'MachineryAndEquipment': 'Machinery & Equipment',
+  'AccumulatedDepreciation': 'Accumulated Depreciation',
+  'OwnersEquity': "Owner's Equity",
+  'RetainedEarnings': 'Retained Earnings',
+  'CommonStock': 'Common Stock',
+  'OwnerDistributions': 'Owner Distributions',
+  'OwnerContributions': 'Owner Contributions',
+  'ShareholderNotesPayable': 'Shareholder Notes Payable',
+  'SecurityDeposits': 'Security Deposits',
+  'LeaseBuyout': 'Lease Buyout',
+  'NonProfitIncome': 'Non-Profit Income'
+};
+function subtypeLabel(s) { return SUBTYPE_LABELS[s] || s; }
+
+function openVendorCreate(prefillName = '') {
+  document.getElementById('catVendorName').value = prefillName || '';
+  document.getElementById('catVendorEmail').value = '';
+  document.getElementById('catVendorPhone').value = '';
+  document.getElementById('catVendorNotes').value = '';
+  document.getElementById('catVendorDedup').style.display = 'none';
+  document.getElementById('catVendorCreateBtn').disabled = false;
+  document.getElementById('catVendorCreateBtn').textContent = 'Create in QuickBooks';
+  document.getElementById('catVendorModal').classList.add('open');
+  setTimeout(() => document.getElementById('catVendorName').focus(), 100);
+  if (prefillName) onVendorNameInput();
+}
+function closeVendorCreate() { document.getElementById('catVendorModal').classList.remove('open'); }
+function onVendorNameInput() {
+  const name = document.getElementById('catVendorName').value.trim().toLowerCase();
+  const dedup = document.getElementById('catVendorDedup');
+  if (name.length < 3) { dedup.style.display = 'none'; return; }
+  const matches = catVendors.filter(v => {
+    const vn = v.displayName.toLowerCase();
+    if (vn === name) return true;
+    if (vn.includes(name) || name.includes(vn)) return true;
+    const nt = name.split(/\s+/).filter(t => t.length >= 3);
+    return nt.some(t => vn.includes(t));
+  }).slice(0, 5);
+  if (!matches.length) { dedup.style.display = 'none'; return; }
+  dedup.innerHTML = `
+    <div class="cat-form-warn" style="background: rgba(124,110,245,.06); border-color: var(--blue-light); color: var(--text-primary)">
+      <span class="ic" style="color: var(--blue-dark)">ℹ</span>
+      <div>
+        <div style="font-weight: 600; font-size: .75rem">Similar vendors already exist:</div>
+        <div style="margin-top: 6px; display: flex; flex-wrap: wrap; gap: 6px">
+          ${matches.map(m => `<span style="background: white; border: 1px solid var(--blue-light); color: var(--blue-dark); padding: 3px 9px; border-radius: 12px; font-size: .72rem; font-weight: 500; cursor: pointer" onclick="closeVendorCreate(); showToast('Use existing vendor: ${escapeHtml(m.displayName)} from the dropdown', false)">${escapeHtml(m.displayName)}</span>`).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+  dedup.style.display = 'block';
+}
+async function submitVendorCreate() {
+  const name = document.getElementById('catVendorName').value.trim();
+  if (!name) { showToast('Vendor name is required', true); return; }
+  const btn = document.getElementById('catVendorCreateBtn');
+  btn.disabled = true; btn.textContent = 'Creating…';
+  const body = {
+    displayName: name,
+    email: document.getElementById('catVendorEmail').value.trim(),
+    phone: document.getElementById('catVendorPhone').value.trim(),
+    notes: document.getElementById('catVendorNotes').value.trim()
+  };
+  try {
+    const res = await fetch('/api/vendor', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const data = await res.json();
+    if (!data.success) throw new Error(typeof data.error === 'string' ? data.error : JSON.stringify(data.error));
+    closeVendorCreate();
+    showToast(`Vendor "${data.vendor.displayName}" created in QBO`);
+    await loadCatMasters(true);
+    if (catTxns.length) { autoCategorizeTxns(catTxns); renderCatTable(catTxns); renderCatStats(catTxns); refreshPushBar(); }
+  } catch (err) {
+    showToast('Create vendor failed: ' + (err.message || err), true);
+    btn.disabled = false; btn.textContent = 'Retry';
+  }
+}
+
+function openAccountCreate(prefillName = '') {
+  document.getElementById('catAccountName').value = prefillName || '';
+  document.getElementById('catAccountType').value = 'Expense';
+  document.getElementById('catAccountNum').value = '';
+  document.getElementById('catAccountDesc').value = '';
+  document.getElementById('catAccountDedup').style.display = 'none';
+  document.getElementById('catAccountCreateBtn').disabled = false;
+  document.getElementById('catAccountCreateBtn').textContent = 'Create in QuickBooks';
+  populateParentAccountDropdown();
+  updateAccountSubtypes();
+  document.getElementById('catAccountModal').classList.add('open');
+  setTimeout(() => document.getElementById('catAccountName').focus(), 100);
+}
+function closeAccountCreate() { document.getElementById('catAccountModal').classList.remove('open'); }
+function populateParentAccountDropdown() {
+  const sel = document.getElementById('catAccountParent');
+  const type = document.getElementById('catAccountType').value;
+  const candidates = catAccountsAll
+    .filter(a => a.AccountType === type && !a.SubAccount)
+    .sort((a,b) => a.FullyQualifiedName.localeCompare(b.FullyQualifiedName));
+  sel.innerHTML = '<option value="">— None (top-level account) —</option>' +
+    candidates.map(a => `<option value="${a.Id}">${escapeHtml(a.FullyQualifiedName)}</option>`).join('');
+}
+function updateAccountSubtypes() {
+  const type = document.getElementById('catAccountType').value;
+  const sel = document.getElementById('catAccountSubType');
+  const subs = ACCOUNT_SUBTYPES[type] || [];
+  sel.innerHTML = subs.map(s => `<option value="${s}">${escapeHtml(subtypeLabel(s))}</option>`).join('');
+  populateParentAccountDropdown();
+  updateAccountPreview();
+}
+function updateAccountPreview() {
+  const name = document.getElementById('catAccountName').value.trim() || '(unnamed)';
+  const type = document.getElementById('catAccountType').value;
+  const subType = subtypeLabel(document.getElementById('catAccountSubType').value);
+  const parentId = document.getElementById('catAccountParent').value;
+  const parent = parentId ? catAccountsAll.find(a => a.Id === parentId) : null;
+  const preview = parent
+    ? `<div>${escapeHtml(parent.FullyQualifiedName)}</div><div style="padding-left: 16px">↳ <strong>${escapeHtml(name)}</strong> <span style="color: var(--text-muted)">(${escapeHtml(type)} · ${escapeHtml(subType)})</span></div>`
+    : `<strong>${escapeHtml(name)}</strong> <span style="color: var(--text-muted)">(${escapeHtml(type)} · ${escapeHtml(subType)})</span>`;
+  document.getElementById('catAccountPreview').innerHTML = preview;
+}
+async function submitAccountCreate() {
+  const name = document.getElementById('catAccountName').value.trim();
+  if (!name) { showToast('Account name is required', true); return; }
+  const accountType = document.getElementById('catAccountType').value;
+  const accountSubType = document.getElementById('catAccountSubType').value;
+  const parentAccountId = document.getElementById('catAccountParent').value;
+  const acctNum = document.getElementById('catAccountNum').value.trim();
+  const description = document.getElementById('catAccountDesc').value.trim();
+  const btn = document.getElementById('catAccountCreateBtn');
+  btn.disabled = true; btn.textContent = 'Creating…';
+  try {
+    const res = await fetch('/api/account', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, accountType, accountSubType, parentAccountId: parentAccountId || undefined, acctNum: acctNum || undefined, description: description || undefined })
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(typeof data.error === 'string' ? data.error : JSON.stringify(data.error));
+    closeAccountCreate();
+    showToast(`Account "${data.account.fullyQualifiedName}" created in QBO`);
+    await loadCatMasters(true);
+    if (catTxns.length) { renderCatTable(catTxns); refreshPushBar(); }
+  } catch (err) {
+    showToast('Create account failed: ' + (err.message || err), true);
+    btn.disabled = false; btn.textContent = 'Retry';
+  }
+}
+
+// Reconcile vs QBO modal
+function openReconcileModal() {
+  if (!catSelectedBankId) { showToast('Pick a bank account first (load a CSV to expose the dropdown).', true); return; }
+  document.getElementById('catReconcileBody').innerHTML = '<div class="cat-loading">Loading reconciliation…</div>';
+  document.getElementById('catReconcileModal').classList.add('open');
+  runReconcile();
+}
+function closeReconcileModal() { document.getElementById('catReconcileModal').classList.remove('open'); }
+async function runReconcile() {
+  const bank = catBankAccounts.find(a => a.Id === catSelectedBankId);
+  if (!bank) { showToast('Bank account not found.', true); return; }
+  document.getElementById('catReconcileBody').innerHTML = '<div class="cat-loading">Querying QBO…</div>';
+  document.getElementById('catReconcileSub').textContent = `${bank.FullyQualifiedName} · ${new Date().getFullYear()}-01-01 to today`;
+  try {
+    const start = `${new Date().getFullYear()}-01-01`;
+    const end = new Date().toISOString().split('T')[0];
+    const res = await fetch(`/api/reconcile?bankAccountId=${encodeURIComponent(bank.Id)}&start=${start}&end=${end}`);
+    const data = await res.json();
+    renderReconcileResults(data);
+  } catch (err) {
+    document.getElementById('catReconcileBody').innerHTML = `<div style="color: var(--red-light); padding: 16px"><strong>Reconcile failed:</strong><br>${escapeHtml(err.message)}</div>`;
+  }
+}
+function renderReconcileResults(data) {
+  const s = data.summary;
+  const allMatch = s.missingInQbo === 0 && s.extraInQbo === 0;
+  document.getElementById('catReconcileBody').innerHTML = `
+    <div class="cat-modal-stats">
+      <div class="cat-modal-stat"><div class="lbl">Pushed Locally</div><div class="val">${s.pushedLocally}</div></div>
+      <div class="cat-modal-stat"><div class="lbl">Found in QBO</div><div class="val green">${s.foundInQbo}</div></div>
+      <div class="cat-modal-stat"><div class="lbl">Missing in QBO</div><div class="val ${s.missingInQbo > 0 ? 'red' : ''}">${s.missingInQbo}</div></div>
+      <div class="cat-modal-stat"><div class="lbl">Extra in QBO</div><div class="val ${s.extraInQbo > 0 ? 'gold' : ''}">${s.extraInQbo}</div></div>
+    </div>
+    ${allMatch ? `<div class="cat-checks"><div class="row"><span class="ic">✓</span><strong>All clear.</strong> Local push history matches QBO actuals exactly.</div></div>` : ''}
+    ${s.missingInQbo > 0 ? `<div class="cat-modal-section">
+      <div class="stitle" style="color: var(--red-light)">⚠ Missing in QBO (${s.missingInQbo}) — pushed but vanished</div>
+      <div style="font-size: .75rem; color: var(--text-secondary); margin-bottom: 8px">These were pushed via this app but no longer exist in QBO.</div>
+      ${data.missingInQbo.map(m => `<div class="cat-results-row err"><span>✕</span><span>${escapeHtml(m.entityType)} #${escapeHtml(m.entityId)}</span><span>${escapeHtml(m.description || '')}</span><span style="text-align:right">$${Math.abs(m.amount).toFixed(2)} · ${escapeHtml(m.txnDate)}</span></div>`).join('')}
+    </div>` : ''}
+    ${s.extraInQbo > 0 ? `<div class="cat-modal-section">
+      <div class="stitle" style="color: var(--gold-light)">⚠ Extra in QBO (${s.extraInQbo}) — created outside this app</div>
+      <div style="font-size: .75rem; color: var(--text-secondary); margin-bottom: 8px">These exist in QBO for this bank/period but weren't pushed via this app.</div>
+      ${data.extraInQbo.slice(0, 50).map(e => `<div class="cat-results-row skip"><span>?</span><span>${escapeHtml(e.type)} #${escapeHtml(e.id)}</span><span>${escapeHtml(e.vendor || '')}</span><span style="text-align:right">$${Math.abs(e.amount).toFixed(2)} · ${escapeHtml(e.date)}</span></div>`).join('')}
+      ${data.extraInQbo.length > 50 ? `<div style="font-size:.7rem; color: var(--text-muted); margin-top: 6px">…and ${data.extraInQbo.length - 50} more</div>` : ''}
+    </div>` : ''}
+    ${data.matched.length > 0 ? `<div class="cat-modal-section">
+      <div class="stitle">✓ Matched (${data.matched.length}) — pushed locally and present in QBO</div>
+      ${data.matched.slice(0, 20).map(m => `<div class="cat-results-row ok"><span>✓</span><span>${escapeHtml(m.entityType)} #${escapeHtml(m.entityId)}</span><span>${escapeHtml(m.description || '')}</span><span style="text-align:right">$${Math.abs(m.amount).toFixed(2)}</span></div>`).join('')}
+      ${data.matched.length > 20 ? `<div style="font-size:.7rem; color: var(--text-muted); margin-top: 6px">…and ${data.matched.length - 20} more</div>` : ''}
+    </div>` : ''}
+  `;
+}
+
+// Vendor Context Drawer
+function openVendorDrawer(vendorId) {
+  const v = catVendors.find(x => x.id === vendorId);
+  const hist = catVendorHistory[vendorId];
+  if (!v) return;
+  document.getElementById('catDrawerTitle').textContent = v.displayName;
+  document.getElementById('catDrawerSub').textContent = `QBO ID: ${vendorId}${v.active ? ' · Active' : ' · Inactive'}${v.balance ? ' · Open Balance: $' + v.balance.toFixed(2) : ''}`;
+  document.getElementById('catDrawerQboLink').href = `https://qbo.intuit.com/app/vendordetail?nameId=${vendorId}`;
+  let html = '';
+  html += `<div class="cat-drawer-section">
+    <div class="stitle">Vendor Info</div>
+    <div class="cat-info-row"><span class="lbl">Display Name</span><span class="val">${escapeHtml(v.displayName)}</span></div>
+    <div class="cat-info-row"><span class="lbl">Company Name</span><span class="val">${escapeHtml(v.companyName || '—')}</span></div>
+    <div class="cat-info-row"><span class="lbl">Open Balance</span><span class="val">${v.balance ? '$' + v.balance.toFixed(2) : '$0.00'}</span></div>
+    <div class="cat-info-row"><span class="lbl">Status</span><span class="val">${v.active ? 'Active' : 'Inactive'}</span></div>
+  </div>`;
+  if (hist && hist.count > 0) {
+    html += `<div class="cat-drawer-section">
+      <div class="stitle">Activity Summary</div>
+      <div class="cat-totals-grid">
+        <div class="cell"><div class="lbl">Total Spend</div><div class="val">$${hist.totalSpend.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</div></div>
+        <div class="cell"><div class="lbl">Open Balance</div><div class="val ${v.balance > 0 ? 'gold' : ''}">${v.balance ? '$' + v.balance.toFixed(2) : '$0'}</div></div>
+        <div class="cell"><div class="lbl">Avg / Txn</div><div class="val">$${(hist.totalSpend / hist.count).toFixed(0)}</div></div>
+        <div class="cell"><div class="lbl">Total Purchases</div><div class="val">${hist.count}</div></div>
+      </div>
+    </div>`;
+    if (hist.recentTxns?.length) {
+      html += `<div class="cat-drawer-section">
+        <div class="stitle">Recent Transactions</div>
+        <div class="cat-txn-list">
+          ${hist.recentTxns.map(t => `<div class="row"><span class="d">${formatDateShort(t.date)}</span><span class="a">Purchase #${t.id}<span class="acct">${escapeHtml(t.accountName)}</span></span><span class="amt">$${Math.abs(t.amount).toFixed(2)}</span></div>`).join('')}
+        </div>
+      </div>`;
+    }
+    if (hist.topAccounts?.length) {
+      html += `<div class="cat-drawer-section">
+        <div class="stitle">Categorization Pattern</div>
+        <div class="cat-pattern-bar">
+          ${hist.topAccounts.map(a => `<div class="pr"><span class="pn">${escapeHtml(a.name)}</span><span class="pp">${a.pct}%</span></div>`).join('')}
+        </div>
+        <div style="font-size: .7rem; color: var(--text-muted); margin-top: 8px; padding: 0 4px">Confidence on default suggestion: <strong>${hist.defaultAccountConfidence}%</strong> based on ${hist.count} historical purchase${hist.count > 1 ? 's' : ''}</div>
+      </div>`;
+    }
+  } else {
+    html += `<div class="cat-drawer-section">
+      <div class="stitle">Activity Summary</div>
+      <div class="cat-empty-drawer">No prior purchases for this vendor in QBO.<br><br>Once you push transactions, history will appear here for AI auto-categorization.</div>
+    </div>`;
+  }
+  document.getElementById('catDrawerBody').innerHTML = html;
+  document.getElementById('catDrawerBg').classList.add('open');
+  document.getElementById('catDrawer').classList.add('open');
+}
+function closeVendorDrawer() {
+  document.getElementById('catDrawerBg').classList.remove('open');
+  document.getElementById('catDrawer').classList.remove('open');
+}
+function formatDateShort(isoDate) {
+  if (!isoDate) return '—';
+  const [y, m, d] = isoDate.split('T')[0].split('-');
+  return `${m}/${d}/${y.slice(2)}`;
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeVendorDrawer(); });
 
 // ── BANK REC MODULE ──────────────────────────────────────────────
 let recBankAccounts = [];

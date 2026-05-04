@@ -232,6 +232,19 @@ async function qboQuery(userId, realmId, query) {
   return response.data;
 }
 
+async function qboCreate(userId, realmId, entityType, payload) {
+  const token = await getAccessToken(userId);
+  const url = `${API_BASE}/v3/company/${realmId}/${entityType}`;
+  const response = await axios.post(url, payload, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Accept':        'application/json',
+      'Content-Type':  'application/json'
+    }
+  });
+  return response.data;
+}
+
 // ── Data API Routes (multi-tenant) ────────────────────────────────────────────
 
 // Get connection for target user, return 401 if not connected
@@ -490,6 +503,342 @@ app.delete('/api/bank-rec/session/:id', requireAuth, async (req, res) => {
   } catch (err) {
     console.error('Bank rec delete error:', err.message);
     res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Categorize Bank ───────────────────────────────────────────────────────────
+
+// All QBO accounts (full chart). Categorize uses this for the category dropdown.
+app.get('/api/accounts', requireAuth, async (req, res) => {
+  try {
+    const target = await getConn(req, res); if (!target) return;
+    const data = await qboQuery(target.userId, target.conn.realm_id,
+      'SELECT * FROM Account MAXRESULTS 1000'
+    );
+    res.json(data);
+  } catch (err) {
+    console.error('Accounts error:', err.response?.data || err.message);
+    res.status(500).json({ error: err.response?.data || err.message });
+  }
+});
+
+// All vendors
+app.get('/api/vendors', requireAuth, async (req, res) => {
+  try {
+    const target = await getConn(req, res); if (!target) return;
+    const data = await qboQuery(target.userId, target.conn.realm_id,
+      'SELECT * FROM Vendor MAXRESULTS 1000'
+    );
+    const vendors = (data.QueryResponse?.Vendor || []).map(v => ({
+      id:          v.Id,
+      displayName: v.DisplayName,
+      companyName: v.CompanyName || null,
+      active:      v.Active,
+      balance:     Number(v.Balance || 0)
+    }));
+    res.json({ count: vendors.length, vendors });
+  } catch (err) {
+    console.error('Vendors error:', err.response?.data || err.message);
+    res.status(500).json({ error: err.response?.data || err.message });
+  }
+});
+
+// Vendor history → per-vendor default account suggestion (drives AI auto-categorization)
+app.get('/api/vendor-history', requireAuth, async (req, res) => {
+  try {
+    const target = await getConn(req, res); if (!target) return;
+    const data = await qboQuery(target.userId, target.conn.realm_id,
+      'SELECT * FROM Purchase ORDERBY TxnDate DESC MAXRESULTS 1000'
+    );
+    const purchases = data.QueryResponse?.Purchase || [];
+    const byVendor = {};
+    for (const p of purchases) {
+      const vendorId   = p.EntityRef?.value;
+      const vendorName = p.EntityRef?.name;
+      if (!vendorId || p.EntityRef?.type !== 'Vendor') continue;
+      if (!byVendor[vendorId]) {
+        byVendor[vendorId] = { displayName: vendorName, count: 0, totalSpend: 0, accountCounts: {}, recentTxns: [] };
+      }
+      const v = byVendor[vendorId];
+      v.count++;
+      v.totalSpend += Number(p.TotalAmt || 0);
+      if (v.recentTxns.length < 5) {
+        const firstLine = (p.Line || []).find(l => l.AccountBasedExpenseLineDetail) || (p.Line || [])[0];
+        v.recentTxns.push({
+          id: p.Id,
+          date: p.TxnDate,
+          amount: Number(p.TotalAmt || 0),
+          accountName: firstLine?.AccountBasedExpenseLineDetail?.AccountRef?.name || '(unknown)',
+          docNumber: p.DocNumber || null,
+          memo: p.PrivateNote || null
+        });
+      }
+      for (const line of (p.Line || [])) {
+        const acctRef = line.AccountBasedExpenseLineDetail?.AccountRef;
+        if (!acctRef?.value) continue;
+        const key = acctRef.value;
+        if (!v.accountCounts[key]) v.accountCounts[key] = { id: key, name: acctRef.name, count: 0 };
+        v.accountCounts[key].count++;
+      }
+    }
+    for (const v of Object.values(byVendor)) {
+      const accounts = Object.values(v.accountCounts).sort((a, b) => b.count - a.count);
+      v.defaultAccountId         = accounts[0]?.id || null;
+      v.defaultAccountName       = accounts[0]?.name || null;
+      v.defaultAccountConfidence = accounts[0] && v.count > 0 ? Math.round((accounts[0].count / v.count) * 100) : 0;
+      v.topAccounts = accounts.slice(0, 3).map(a => ({ ...a, pct: Math.round((a.count / v.count) * 100) }));
+    }
+    res.json({ vendorCount: Object.keys(byVendor).length, txnsAnalyzed: purchases.length, byVendor });
+  } catch (err) {
+    console.error('Vendor history error:', err.response?.data || err.message);
+    res.status(500).json({ error: err.response?.data || err.message });
+  }
+});
+
+// Create vendor inline
+app.post('/api/vendor', requireAuth, async (req, res) => {
+  const { displayName, companyName, email, phone, notes } = req.body || {};
+  if (!displayName) return res.status(400).json({ error: 'displayName is required' });
+  try {
+    const target = await getConn(req, res); if (!target) return;
+    const vendorData = { DisplayName: displayName };
+    if (companyName) vendorData.CompanyName = companyName;
+    if (email)       vendorData.PrimaryEmailAddr = { Address: email };
+    if (phone)       vendorData.PrimaryPhone    = { FreeFormNumber: phone };
+    if (notes)       vendorData.Notes           = notes;
+    const data = await qboCreate(target.userId, target.conn.realm_id, 'vendor', vendorData);
+    const v = data.Vendor;
+    res.json({
+      success: true,
+      vendor: { id: v.Id, displayName: v.DisplayName, companyName: v.CompanyName || null, active: v.Active, balance: Number(v.Balance || 0) }
+    });
+  } catch (err) {
+    console.error('Create vendor error:', err.response?.data || err.message);
+    res.status(500).json({ error: err.response?.data || err.message });
+  }
+});
+
+// Create account inline
+app.post('/api/account', requireAuth, async (req, res) => {
+  const { name, accountType, accountSubType, parentAccountId, description, acctNum } = req.body || {};
+  if (!name)           return res.status(400).json({ error: 'name is required' });
+  if (!accountType)    return res.status(400).json({ error: 'accountType is required' });
+  if (!accountSubType) return res.status(400).json({ error: 'accountSubType is required' });
+  try {
+    const target = await getConn(req, res); if (!target) return;
+    const accountData = { Name: name, AccountType: accountType, AccountSubType: accountSubType };
+    if (parentAccountId) {
+      accountData.SubAccount = true;
+      accountData.ParentRef  = { value: String(parentAccountId) };
+    }
+    if (description) accountData.Description = description;
+    if (acctNum)     accountData.AcctNum     = acctNum;
+    const data = await qboCreate(target.userId, target.conn.realm_id, 'account', accountData);
+    const a = data.Account;
+    res.json({
+      success: true,
+      account: { id: a.Id, name: a.Name, fullyQualifiedName: a.FullyQualifiedName, accountType: a.AccountType, accountSubType: a.AccountSubType, active: a.Active }
+    });
+  } catch (err) {
+    console.error('Create account error:', err.response?.data || err.message);
+    res.status(500).json({ error: err.response?.data || err.message });
+  }
+});
+
+// Bulk push categorized transactions as Purchases (Cash / Check / CreditCard)
+app.post('/api/purchase-batch', requireAuth, async (req, res) => {
+  const { bankAccountId, bankAccountName, transactions } = req.body || {};
+  if (!bankAccountId)            return res.status(400).json({ error: 'bankAccountId required' });
+  if (!transactions || !transactions.length) return res.status(400).json({ error: 'transactions array required' });
+  try {
+    const target = await getConn(req, res); if (!target) return;
+    const userId  = target.userId;
+    const realmId = target.conn.realm_id;
+    const results = { created: [], skipped: [], errors: [] };
+
+    for (const txn of transactions) {
+      const dateShort = (txn.date || '').replace(/-/g, '').substring(2);
+      const amtStr    = Math.abs(txn.amount).toFixed(2);
+      const slugLen   = 21 - dateShort.length - 1 - amtStr.length - 1;
+      const slug      = (txn.description || '').toLowerCase().replace(/[^a-z0-9]/g, '').substring(0, Math.max(slugLen, 1));
+      const docNumber = `${dateShort}-${amtStr}-${slug}`;
+
+      // Layer 3: local push-history dedup (per-user)
+      const pastPush = await db.findPushedTxn(userId, realmId, bankAccountId, txn.date, txn.amount, txn.description);
+      if (pastPush) {
+        results.skipped.push({ docNumber, description: txn.description, reason: 'Already pushed locally', priorEntityId: pastPush.entityId });
+        continue;
+      }
+      // Layer 1: QBO DocNumber dedup
+      try {
+        const existing = await qboQuery(userId, realmId, `SELECT Id FROM Purchase WHERE DocNumber = '${docNumber}'`);
+        if (existing.QueryResponse?.Purchase && existing.QueryResponse.Purchase.length > 0) {
+          results.skipped.push({ docNumber, description: txn.description, reason: 'Already exists in QBO' });
+          continue;
+        }
+      } catch (_) { /* proceed if check fails */ }
+
+      try {
+        const purchaseData = {
+          PaymentType: txn.paymentType || 'Cash',
+          AccountRef:  { value: String(bankAccountId), name: bankAccountName },
+          TxnDate:     txn.date,
+          DocNumber:   docNumber,
+          PrivateNote: txn.description,
+          Line: [{
+            Amount: Math.abs(Number(txn.amount)),
+            DetailType: 'AccountBasedExpenseLineDetail',
+            AccountBasedExpenseLineDetail: {
+              AccountRef: { value: String(txn.categoryId), name: txn.categoryName }
+            }
+          }]
+        };
+        if (txn.vendorId) {
+          purchaseData.EntityRef = { value: String(txn.vendorId), name: txn.vendorName || '', type: 'Vendor' };
+        }
+        const data = await qboCreate(userId, realmId, 'purchase', purchaseData);
+        await db.recordPush(userId, realmId, {
+          bankAccountId,
+          entityType: purchaseData.PaymentType === 'Check' ? 'Check' : 'Purchase',
+          entityId:   data.Purchase.Id,
+          txnDate:    txn.date,
+          amount:     txn.amount,
+          description: txn.description
+        });
+        results.created.push({ docNumber, id: data.Purchase.Id, amount: txn.amount, description: txn.description });
+      } catch (err) {
+        results.errors.push({ docNumber, description: txn.description, error: err.response?.data || err.message });
+      }
+    }
+    res.json(results);
+  } catch (err) {
+    console.error('Purchase batch error:', err.response?.data || err.message);
+    res.status(500).json({ error: err.response?.data || err.message });
+  }
+});
+
+// Bulk push positive-amount inflows as Deposits
+app.post('/api/deposit-batch', requireAuth, async (req, res) => {
+  const { bankAccountId, bankAccountName, transactions } = req.body || {};
+  if (!bankAccountId)            return res.status(400).json({ error: 'bankAccountId required' });
+  if (!transactions || !transactions.length) return res.status(400).json({ error: 'transactions array required' });
+  try {
+    const target = await getConn(req, res); if (!target) return;
+    const userId  = target.userId;
+    const realmId = target.conn.realm_id;
+    const results = { created: [], skipped: [], errors: [] };
+
+    for (const txn of transactions) {
+      if (!txn.categoryId) {
+        results.errors.push({ description: txn.description, error: 'categoryId required for deposit' });
+        continue;
+      }
+      const dateShort = (txn.date || '').replace(/-/g, '').substring(2);
+      const amtStr    = Math.abs(txn.amount).toFixed(2);
+      const slugLen   = 21 - dateShort.length - 1 - amtStr.length - 1 - 1;
+      const slug      = (txn.description || '').toLowerCase().replace(/[^a-z0-9]/g, '').substring(0, Math.max(slugLen, 1));
+      const docNumber = `D${dateShort}-${amtStr}-${slug}`.substring(0, 21);
+
+      const pastPush = await db.findPushedTxn(userId, realmId, bankAccountId, txn.date, txn.amount, txn.description);
+      if (pastPush) {
+        results.skipped.push({ docNumber, description: txn.description, reason: 'Already pushed locally', priorEntityId: pastPush.entityId });
+        continue;
+      }
+      try {
+        const existing = await qboQuery(userId, realmId, `SELECT Id FROM Deposit WHERE DocNumber = '${docNumber}'`);
+        if (existing.QueryResponse?.Deposit && existing.QueryResponse.Deposit.length > 0) {
+          results.skipped.push({ docNumber, description: txn.description, reason: 'Already exists in QBO' });
+          continue;
+        }
+      } catch (_) { /* proceed if check fails */ }
+
+      try {
+        const line = {
+          Amount: Math.abs(Number(txn.amount)),
+          DetailType: 'DepositLineDetail',
+          Description: txn.description || null,
+          DepositLineDetail: { AccountRef: { value: String(txn.categoryId), name: txn.categoryName || '' } }
+        };
+        if (txn.customerId) {
+          line.DepositLineDetail.Entity = { value: String(txn.customerId), name: txn.customerName || '', type: 'Customer' };
+        } else if (txn.vendorId) {
+          line.DepositLineDetail.Entity = { value: String(txn.vendorId), name: txn.vendorName || '', type: 'Vendor' };
+        }
+        const depositData = {
+          DepositToAccountRef: { value: String(bankAccountId), name: bankAccountName },
+          TxnDate:     txn.date,
+          DocNumber:   docNumber,
+          PrivateNote: txn.description || null,
+          Line: [line]
+        };
+        const data = await qboCreate(userId, realmId, 'deposit', depositData);
+        await db.recordPush(userId, realmId, {
+          bankAccountId,
+          entityType: 'Deposit',
+          entityId:   data.Deposit.Id,
+          txnDate:    txn.date,
+          amount:     txn.amount,
+          description: txn.description
+        });
+        results.created.push({ docNumber, id: data.Deposit.Id, amount: txn.amount, description: txn.description });
+      } catch (err) {
+        results.errors.push({ docNumber, description: txn.description, error: err.response?.data || err.message });
+      }
+    }
+    res.json(results);
+  } catch (err) {
+    console.error('Deposit batch error:', err.response?.data || err.message);
+    res.status(500).json({ error: err.response?.data || err.message });
+  }
+});
+
+// Reconcile local push history vs QBO actuals (for the Reconcile vs QBO modal)
+app.get('/api/reconcile', requireAuth, async (req, res) => {
+  const { bankAccountId, start, end } = req.query;
+  if (!bankAccountId) return res.status(400).json({ error: 'bankAccountId required' });
+  const startDate = start || `${new Date().getFullYear()}-01-01`;
+  const endDate   = end   || new Date().toISOString().split('T')[0];
+  try {
+    const target = await getConn(req, res); if (!target) return;
+    const userId  = target.userId;
+    const realmId = target.conn.realm_id;
+
+    const localPushed = await db.listPushHistory(userId, bankAccountId, startDate, endDate);
+
+    const purchases = (await qboQuery(userId, realmId,
+      `SELECT * FROM Purchase WHERE TxnDate >= '${startDate}' AND TxnDate <= '${endDate}' MAXRESULTS 500`
+    )).QueryResponse?.Purchase || [];
+    const deposits = (await qboQuery(userId, realmId,
+      `SELECT * FROM Deposit WHERE TxnDate >= '${startDate}' AND TxnDate <= '${endDate}' MAXRESULTS 500`
+    )).QueryResponse?.Deposit || [];
+
+    const purchasesForBank = purchases.filter(p => String(p.AccountRef?.value)         === String(bankAccountId));
+    const depositsForBank  = deposits.filter(d => String(d.DepositToAccountRef?.value) === String(bankAccountId));
+
+    const qboByHash = new Map();
+    for (const p of purchasesForBank) {
+      const h = db.txnHash(realmId, bankAccountId, p.TxnDate, p.TotalAmt, p.PrivateNote || '');
+      qboByHash.set(h, { type: p.PaymentType === 'Check' ? 'Check' : 'Purchase', id: p.Id, date: p.TxnDate, amount: Number(p.TotalAmt), vendor: p.EntityRef?.name, docNumber: p.DocNumber });
+    }
+    for (const d of depositsForBank) {
+      const h = db.txnHash(realmId, bankAccountId, d.TxnDate, d.TotalAmt, d.PrivateNote || '');
+      qboByHash.set(h, { type: 'Deposit', id: d.Id, date: d.TxnDate, amount: Number(d.TotalAmt), docNumber: d.DocNumber });
+    }
+
+    const localHashes  = new Set(localPushed.map(h => h.hash));
+    const missingInQbo = localPushed.filter(h => !qboByHash.has(h.hash));
+    const extraInQbo   = [...qboByHash.entries()].filter(([h]) => !localHashes.has(h)).map(([, v]) => v);
+    const matched      = localPushed.filter(h => qboByHash.has(h.hash));
+
+    res.json({
+      bankAccountId,
+      window:  { start: startDate, end: endDate },
+      summary: { pushedLocally: localPushed.length, foundInQbo: matched.length, missingInQbo: missingInQbo.length, extraInQbo: extraInQbo.length },
+      matched, missingInQbo, extraInQbo
+    });
+  } catch (err) {
+    console.error('Reconcile error:', err.response?.data || err.message);
+    res.status(500).json({ error: err.response?.data || err.message });
   }
 });
 
