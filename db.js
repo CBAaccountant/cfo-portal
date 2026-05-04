@@ -64,11 +64,26 @@ async function initDB() {
         updated_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         finalized_at       TIMESTAMPTZ
       );
+      CREATE TABLE IF NOT EXISTS push_history (
+        id              SERIAL PRIMARY KEY,
+        user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        realm_id        VARCHAR(50) NOT NULL,
+        hash            VARCHAR(32) NOT NULL,
+        entity_type     VARCHAR(40) NOT NULL,
+        entity_id       VARCHAR(50) NOT NULL,
+        bank_account_id VARCHAR(50) NOT NULL,
+        txn_date        DATE NOT NULL,
+        amount          NUMERIC(14,2) NOT NULL,
+        description     TEXT,
+        pushed_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
       CREATE INDEX IF NOT EXISTS idx_session_expire ON session (expire);
       CREATE INDEX IF NOT EXISTS idx_users_email ON users (email);
       CREATE INDEX IF NOT EXISTS idx_qbo_user_id ON qbo_connections (user_id);
       CREATE INDEX IF NOT EXISTS idx_bank_recs_user ON bank_recs (user_id);
       CREATE INDEX IF NOT EXISTS idx_bank_recs_period ON bank_recs (user_id, period_end DESC);
+      CREATE INDEX IF NOT EXISTS idx_push_history_user_hash ON push_history (user_id, hash);
+      CREATE INDEX IF NOT EXISTS idx_push_history_user_bank_date ON push_history (user_id, bank_account_id, txn_date);
     `);
     console.log('Database tables initialized.');
     // Seed or sync admin account from env vars
@@ -368,3 +383,73 @@ module.exports.listBankRecs  = listBankRecs;
 module.exports.getBankRec    = getBankRec;
 module.exports.saveBankRec   = saveBankRec;
 module.exports.deleteBankRec = deleteBankRec;
+
+// ── Push History Operations ───────────────────────────────────────────────────
+// Used by Categorize Bank for layer-3 dedup + reconciliation against QBO actuals.
+
+function txnHash(realmId, bankAccountId, txnDate, amount, description) {
+  const normDesc = String(description || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const key = `${realmId}|${bankAccountId}|${txnDate}|${Math.abs(Number(amount)).toFixed(2)}|${normDesc}`;
+  return crypto.createHash('sha256').update(key).digest('hex').slice(0, 16);
+}
+
+async function findPushedTxn(userId, realmId, bankAccountId, txnDate, amount, description) {
+  const hash = txnHash(realmId, bankAccountId, txnDate, amount, description);
+  const { rows } = await pool.query(
+    `SELECT id, hash, entity_type, entity_id, bank_account_id, txn_date, amount, description, pushed_at
+     FROM push_history WHERE user_id = $1 AND hash = $2 LIMIT 1`,
+    [userId, hash]
+  );
+  if (!rows[0]) return null;
+  const r = rows[0];
+  return {
+    hash: r.hash,
+    entityType: r.entity_type,
+    entityId: r.entity_id,
+    bankAccountId: r.bank_account_id,
+    txnDate: r.txn_date instanceof Date ? r.txn_date.toISOString().slice(0,10) : r.txn_date,
+    amount: Number(r.amount),
+    description: r.description,
+    pushedAt: r.pushed_at
+  };
+}
+
+async function recordPush(userId, realmId, { bankAccountId, entityType, entityId, txnDate, amount, description }) {
+  const hash = txnHash(realmId, bankAccountId, txnDate, amount, description);
+  await pool.query(
+    `INSERT INTO push_history
+       (user_id, realm_id, hash, entity_type, entity_id, bank_account_id, txn_date, amount, description)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+    [userId, realmId, hash, entityType, String(entityId), String(bankAccountId), txnDate, Number(amount), description || '']
+  );
+  return hash;
+}
+
+// List push history for a user in an optional bank/date window. Used by /api/reconcile.
+async function listPushHistory(userId, bankAccountId, startDate, endDate) {
+  const params = [userId];
+  let where = `user_id = $1`;
+  if (bankAccountId) { params.push(String(bankAccountId)); where += ` AND bank_account_id = $${params.length}`; }
+  if (startDate)     { params.push(startDate);              where += ` AND txn_date >= $${params.length}`; }
+  if (endDate)       { params.push(endDate);                where += ` AND txn_date <= $${params.length}`; }
+  const { rows } = await pool.query(
+    `SELECT hash, entity_type, entity_id, bank_account_id, txn_date, amount, description, pushed_at
+     FROM push_history WHERE ${where} ORDER BY txn_date ASC`,
+    params
+  );
+  return rows.map(r => ({
+    hash: r.hash,
+    entityType: r.entity_type,
+    entityId: r.entity_id,
+    bankAccountId: r.bank_account_id,
+    txnDate: r.txn_date instanceof Date ? r.txn_date.toISOString().slice(0,10) : r.txn_date,
+    amount: Number(r.amount),
+    description: r.description,
+    pushedAt: r.pushed_at
+  }));
+}
+
+module.exports.txnHash         = txnHash;
+module.exports.findPushedTxn   = findPushedTxn;
+module.exports.recordPush      = recordPush;
+module.exports.listPushHistory = listPushHistory;
