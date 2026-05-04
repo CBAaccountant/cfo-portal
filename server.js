@@ -347,6 +347,152 @@ app.get('/api/vendor-spend', requireAuth, async (req, res) => {
   }
 });
 
+// ── Bank Rec ──────────────────────────────────────────────────────────────────
+
+// Bank-type accounts for the dropdown (Bank + Credit Card)
+app.get('/api/bank-accounts', requireAuth, async (req, res) => {
+  try {
+    const target = await getConn(req, res); if (!target) return;
+    const data = await qboQuery(target.userId, target.conn.realm_id,
+      `SELECT Id, Name, FullyQualifiedName, AccountType, AccountSubType, CurrentBalance FROM Account WHERE AccountType IN ('Bank', 'Credit Card') AND Active = true MAXRESULTS 200`
+    );
+    const accounts = (data.QueryResponse?.Account || []).map(a => ({
+      Id:                 a.Id,
+      Name:               a.Name,
+      FullyQualifiedName: a.FullyQualifiedName,
+      AccountType:        a.AccountType,
+      AccountSubType:     a.AccountSubType,
+      CurrentBalance:     Number(a.CurrentBalance || 0)
+    }));
+    res.json({ count: accounts.length, accounts });
+  } catch (err) {
+    console.error('Bank accounts error:', err.response?.data || err.message);
+    res.status(500).json({ error: err.response?.data || err.message });
+  }
+});
+
+// Transactions hitting the chosen bank account in the period (Purchase + Deposit).
+// Each row: { id, type, qboType, date, amount (signed), description, vendor, docNumber }
+app.get('/api/bank-rec/transactions', requireAuth, async (req, res) => {
+  const { bankAccountId, start, end } = req.query;
+  if (!bankAccountId) return res.status(400).json({ error: 'bankAccountId required' });
+  if (!start || !end) return res.status(400).json({ error: 'start + end (YYYY-MM-DD) required' });
+  try {
+    const target = await getConn(req, res); if (!target) return;
+    const userId = target.userId;
+    const realmId = target.conn.realm_id;
+
+    const purchasesData = await qboQuery(userId, realmId,
+      `SELECT * FROM Purchase WHERE TxnDate >= '${start}' AND TxnDate <= '${end}' MAXRESULTS 1000`
+    );
+    const depositsData = await qboQuery(userId, realmId,
+      `SELECT * FROM Deposit WHERE TxnDate >= '${start}' AND TxnDate <= '${end}' MAXRESULTS 1000`
+    );
+    const purchases = purchasesData.QueryResponse?.Purchase || [];
+    const deposits  = depositsData.QueryResponse?.Deposit  || [];
+
+    const txns = [];
+    for (const p of purchases) {
+      if (String(p.AccountRef?.value) !== String(bankAccountId)) continue;
+      txns.push({
+        id: p.Id,
+        type: p.PaymentType === 'Check' ? 'Check' : (p.PaymentType === 'CreditCard' ? 'CC Charge' : 'Expense'),
+        qboType: 'Purchase',
+        date: p.TxnDate,
+        amount: -Math.abs(Number(p.TotalAmt || 0)),
+        description: p.PrivateNote || '',
+        vendor: p.EntityRef?.name || '',
+        docNumber: p.DocNumber || ''
+      });
+    }
+    for (const d of deposits) {
+      if (String(d.DepositToAccountRef?.value) !== String(bankAccountId)) continue;
+      const firstLine = (d.Line || [])[0];
+      txns.push({
+        id: d.Id,
+        type: 'Deposit',
+        qboType: 'Deposit',
+        date: d.TxnDate,
+        amount: +Math.abs(Number(d.TotalAmt || 0)),
+        description: d.PrivateNote || firstLine?.Description || '',
+        vendor: firstLine?.DepositLineDetail?.Entity?.name || '',
+        docNumber: d.DocNumber || ''
+      });
+    }
+    txns.sort((a, b) => a.date.localeCompare(b.date));
+    res.json({ count: txns.length, transactions: txns });
+  } catch (err) {
+    console.error('Bank rec transactions error:', err.response?.data || err.message);
+    res.status(500).json({ error: err.response?.data || err.message });
+  }
+});
+
+// List saved rec sessions for the current target user
+app.get('/api/bank-rec/sessions', requireAuth, async (req, res) => {
+  try {
+    const target = await getConn(req, res); if (!target) return;
+    const sessions = await db.listBankRecs(target.userId);
+    res.json({ count: sessions.length, sessions });
+  } catch (err) {
+    console.error('Bank rec list error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get a specific rec session (scoped to current target user)
+app.get('/api/bank-rec/session/:id', requireAuth, async (req, res) => {
+  try {
+    const target = await getConn(req, res); if (!target) return;
+    const id = parseInt(req.params.id, 10);
+    if (!Number.isFinite(id)) return res.status(400).json({ error: 'Invalid id' });
+    const session = await db.getBankRec(target.userId, id);
+    if (!session) return res.status(404).json({ error: 'Not found' });
+    res.json(session);
+  } catch (err) {
+    console.error('Bank rec get error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Create or update a rec session
+// Body: { id?, bankAccountId, bankAccountName, periodStart, periodEnd, beginningBalance, endingBalance, clearedTxnIds, notes, status }
+app.post('/api/bank-rec/session', requireAuth, async (req, res) => {
+  try {
+    const target = await getConn(req, res); if (!target) return;
+    const body = req.body || {};
+    if (!body.bankAccountId || !body.periodStart || !body.periodEnd) {
+      return res.status(400).json({ error: 'bankAccountId, periodStart, periodEnd required' });
+    }
+    const payload = { ...body };
+    if (payload.id != null) {
+      const idNum = parseInt(payload.id, 10);
+      if (!Number.isFinite(idNum)) return res.status(400).json({ error: 'Invalid id' });
+      payload.id = idNum;
+    }
+    const result = await db.saveBankRec(target.userId, target.conn.realm_id, payload);
+    if (result.error) return res.status(400).json({ error: result.error });
+    res.json({ success: true, session: result.session });
+  } catch (err) {
+    console.error('Bank rec save error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Discard an in-progress rec (finalized recs are protected)
+app.delete('/api/bank-rec/session/:id', requireAuth, async (req, res) => {
+  try {
+    const target = await getConn(req, res); if (!target) return;
+    const id = parseInt(req.params.id, 10);
+    if (!Number.isFinite(id)) return res.status(400).json({ error: 'Invalid id' });
+    const result = await db.deleteBankRec(target.userId, id);
+    if (result.error) return res.status(result.error === 'Not found' ? 404 : 400).json({ error: result.error });
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Bank rec delete error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── Admin Routes ──────────────────────────────────────────────────────────────
 
 // List all clients

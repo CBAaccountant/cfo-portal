@@ -47,16 +47,35 @@ async function initDB() {
         expire TIMESTAMP(6) NOT NULL,
         CONSTRAINT session_pkey PRIMARY KEY (sid) NOT DEFERRABLE INITIALLY IMMEDIATE
       );
+      CREATE TABLE IF NOT EXISTS bank_recs (
+        id                 SERIAL PRIMARY KEY,
+        user_id            INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        realm_id           VARCHAR(50) NOT NULL,
+        bank_account_id    VARCHAR(50) NOT NULL,
+        bank_account_name  VARCHAR(255),
+        period_start       DATE NOT NULL,
+        period_end         DATE NOT NULL,
+        beginning_balance  NUMERIC(14,2) NOT NULL DEFAULT 0,
+        ending_balance     NUMERIC(14,2) NOT NULL DEFAULT 0,
+        cleared_txn_ids    JSONB NOT NULL DEFAULT '[]'::jsonb,
+        notes              TEXT NOT NULL DEFAULT '',
+        status             VARCHAR(20) NOT NULL DEFAULT 'in_progress' CHECK (status IN ('in_progress', 'finalized')),
+        created_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        finalized_at       TIMESTAMPTZ
+      );
       CREATE INDEX IF NOT EXISTS idx_session_expire ON session (expire);
       CREATE INDEX IF NOT EXISTS idx_users_email ON users (email);
       CREATE INDEX IF NOT EXISTS idx_qbo_user_id ON qbo_connections (user_id);
+      CREATE INDEX IF NOT EXISTS idx_bank_recs_user ON bank_recs (user_id);
+      CREATE INDEX IF NOT EXISTS idx_bank_recs_period ON bank_recs (user_id, period_end DESC);
     `);
     console.log('Database tables initialized.');
-    // Seed admin account if env vars provided and admin doesn't exist
+    // Seed or sync admin account from env vars
     const adminEmail = process.env.ADMIN_EMAIL;
     const adminPass  = process.env.ADMIN_PASSWORD;
     if (adminEmail && adminPass) {
-      const existing = await client.query('SELECT id FROM users WHERE email = $1', [adminEmail]);
+      const existing = await client.query('SELECT id, password_hash FROM users WHERE email = $1', [adminEmail]);
       if (existing.rows.length === 0) {
         const hash = await bcrypt.hash(adminPass, 10);
         await client.query(
@@ -64,6 +83,14 @@ async function initDB() {
           [adminEmail, hash]
         );
         console.log(`Admin account created: ${adminEmail}`);
+      } else {
+        // Sync password if env var changed since last deploy
+        const match = await bcrypt.compare(adminPass, existing.rows[0].password_hash);
+        if (!match) {
+          const hash = await bcrypt.hash(adminPass, 10);
+          await client.query('UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2', [hash, existing.rows[0].id]);
+          console.log('Admin password synced from env var');
+        }
       }
     }
   } catch (err) {
@@ -234,3 +261,110 @@ module.exports.saveQboTokens     = saveQboTokens;
 module.exports.getQboConnection  = getQboConnection;
 module.exports.updateQboTokens   = updateQboTokens;
 module.exports.deleteQboConnection = deleteQboConnection;
+
+// ── Bank Rec Operations ───────────────────────────────────────────────────────
+
+function rowToBankRec(row) {
+  if (!row) return null;
+  return {
+    id:               row.id,
+    realmId:          row.realm_id,
+    bankAccountId:    row.bank_account_id,
+    bankAccountName:  row.bank_account_name,
+    periodStart:      row.period_start instanceof Date ? row.period_start.toISOString().slice(0,10) : row.period_start,
+    periodEnd:        row.period_end   instanceof Date ? row.period_end.toISOString().slice(0,10)   : row.period_end,
+    beginningBalance: Number(row.beginning_balance),
+    endingBalance:    Number(row.ending_balance),
+    clearedTxnIds:    Array.isArray(row.cleared_txn_ids) ? row.cleared_txn_ids : (row.cleared_txn_ids || []),
+    notes:            row.notes || '',
+    status:           row.status,
+    createdAt:        row.created_at,
+    updatedAt:        row.updated_at,
+    finalizedAt:      row.finalized_at
+  };
+}
+
+async function listBankRecs(userId) {
+  const { rows } = await pool.query(
+    `SELECT * FROM bank_recs WHERE user_id = $1 ORDER BY period_end DESC, id DESC`,
+    [userId]
+  );
+  return rows.map(rowToBankRec);
+}
+
+async function getBankRec(userId, id) {
+  const { rows } = await pool.query(
+    `SELECT * FROM bank_recs WHERE user_id = $1 AND id = $2`,
+    [userId, id]
+  );
+  return rowToBankRec(rows[0]);
+}
+
+// Upsert: id present → update (rejects if row is finalized); id absent → insert.
+// Sets finalized_at when status transitions to 'finalized'.
+async function saveBankRec(userId, realmId, payload) {
+  const {
+    id, bankAccountId, bankAccountName, periodStart, periodEnd,
+    beginningBalance, endingBalance, clearedTxnIds, notes, status
+  } = payload;
+  const cleared = JSON.stringify(Array.isArray(clearedTxnIds) ? clearedTxnIds : []);
+  const safeStatus = status === 'finalized' ? 'finalized' : 'in_progress';
+
+  if (id) {
+    // Verify ownership + not finalized before updating
+    const existing = await getBankRec(userId, id);
+    if (!existing) return { error: 'Not found' };
+    if (existing.status === 'finalized') {
+      return { error: 'This reconciliation is finalized and read-only. Discard or create a new rec to make changes.' };
+    }
+    const finalizedClause = (safeStatus === 'finalized')
+      ? 'finalized_at = COALESCE(finalized_at, NOW())'
+      : 'finalized_at = finalized_at';
+    const { rows } = await pool.query(
+      `UPDATE bank_recs
+       SET bank_account_id    = $3,
+           bank_account_name  = $4,
+           period_start       = $5,
+           period_end         = $6,
+           beginning_balance  = $7,
+           ending_balance     = $8,
+           cleared_txn_ids    = $9::jsonb,
+           notes              = $10,
+           status             = $11,
+           updated_at         = NOW(),
+           ${finalizedClause}
+       WHERE user_id = $1 AND id = $2
+       RETURNING *`,
+      [userId, id, bankAccountId, bankAccountName || null, periodStart, periodEnd,
+       Number(beginningBalance || 0), Number(endingBalance || 0), cleared,
+       notes || '', safeStatus]
+    );
+    return { session: rowToBankRec(rows[0]) };
+  } else {
+    const { rows } = await pool.query(
+      `INSERT INTO bank_recs
+         (user_id, realm_id, bank_account_id, bank_account_name, period_start, period_end,
+          beginning_balance, ending_balance, cleared_txn_ids, notes, status, finalized_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10, $11,
+               CASE WHEN $11 = 'finalized' THEN NOW() ELSE NULL END)
+       RETURNING *`,
+      [userId, realmId, bankAccountId, bankAccountName || null, periodStart, periodEnd,
+       Number(beginningBalance || 0), Number(endingBalance || 0), cleared,
+       notes || '', safeStatus]
+    );
+    return { session: rowToBankRec(rows[0]) };
+  }
+}
+
+async function deleteBankRec(userId, id) {
+  const existing = await getBankRec(userId, id);
+  if (!existing) return { error: 'Not found' };
+  if (existing.status === 'finalized') return { error: 'Cannot delete a finalized rec' };
+  await pool.query(`DELETE FROM bank_recs WHERE user_id = $1 AND id = $2`, [userId, id]);
+  return { success: true };
+}
+
+module.exports.listBankRecs  = listBankRecs;
+module.exports.getBankRec    = getBankRec;
+module.exports.saveBankRec   = saveBankRec;
+module.exports.deleteBankRec = deleteBankRec;
