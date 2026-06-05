@@ -1132,6 +1132,29 @@ function rowVals(row){
   return row.ColData.slice(1,-1).map(c=>parseFloat(c?.value||0)||0);
 }
 
+// Find a P&L summary total anywhere in the report tree by label (e.g. 'gross profit').
+function findPLSummary(rows, label){
+  for(const r of rows||[]){
+    if(r.type==='Section'){
+      const s=r.Summary?.ColData?.[0]?.value?.toLowerCase();
+      if(s&&s.includes(label.toLowerCase())) return rowVal(r.Summary);
+      const sub=findPLSummary(r.Rows?.Row||[], label);
+      if(sub!==null) return sub;
+    }
+  }
+  return null;
+}
+// Gross profit + gross margin % from a QBO P&L report. Prefer the explicit Gross Profit
+// row; if QBO doesn't return one, fall back to Revenue minus Cost of Goods Sold.
+function grossFrom(rows, totalRev){
+  let gp=findPLSummary(rows,'gross profit');
+  if(gp===null){
+    const cogs=findPLSummary(rows,'cost of goods sold')||0;
+    gp=totalRev-cogs;
+  }
+  return { grossProfit:gp, grossMargin: totalRev?gp/totalRev*100:0 };
+}
+
 // ── CLIENT COMPANY NAME ──
 let clientCompanyName = '';
 
@@ -1249,6 +1272,7 @@ function renderPnL(data, start, end){
   const netInc    = rowVal(netRow?.Summary);
   const netMargin = totalRev?(netInc/totalRev)*100:0;
   const expRatio  = totalRev?(totalExp/totalRev)*100:0;
+  const { grossProfit, grossMargin } = grossFrom(rows, totalRev);
 
   const revM = rowVals(incSec?.Summary);
   const expM = rowVals(expSec?.Summary);
@@ -1264,8 +1288,9 @@ function renderPnL(data, start, end){
   const kpis = [
     {label:'Revenue',       val:totalRev, ac:'var(--blue)',       sub:rangeLabel},
     {label:'Expenses',      val:totalExp, ac:'var(--red-light)',   sub:rangeLabel, neg:true},
+    {label:'Gross Margin',  val:null, display:grossMargin.toFixed(1)+'%', ac:'var(--green-light)', sub:'Gross Profit ÷ Revenue', colored2:grossMargin},
     {label:'Net Income',    val:netInc,   ac:'var(--teal-light)',  sub:rangeLabel, colored:true},
-    {label:'Net Margin',    val:null, display:netMargin.toFixed(1)+'%', ac:'var(--green-light)', sub:'Net Income ÷ Revenue', colored2:netMargin},
+    {label:'Net Income %',  val:null, display:netMargin.toFixed(1)+'%', ac:'var(--green-light)', sub:'Net Income ÷ Revenue', colored2:netMargin},
     {label:'Expense Ratio', val:null, display:expRatio.toFixed(1)+'%', ac:'var(--gold-light)',  sub:'Expenses ÷ Revenue'},
     {label:'Revenue Coverage', val:null, display:totalExp?(totalRev/totalExp).toFixed(2)+'x':'—', ac:'var(--blue-light)', sub:'Revenue ÷ Expenses', colored2:totalRev-totalExp},
   ];
@@ -1674,6 +1699,8 @@ function buildReport(plData, bsData, arData, apData, start, end) {
   const totalRev = rowVal(incSec?.Summary);
   const totalExp = rowVal(expSec?.Summary);
   const netInc   = rowVal(netRow?.Summary);
+  const { grossProfit, grossMargin } = grossFrom(plRows, totalRev);
+  const netMargin = totalRev?netInc/totalRev*100:0;
 
   const bsRows = bsData.Rows?.Row || [];
   function findBSTotal(label, rws) {
@@ -1830,6 +1857,23 @@ function buildReport(plData, bsData, arData, apData, start, end) {
       </div>
     </div>
     ${buildPLTable(plData)}
+    <div class="rpt-summary-grid" style="margin-top:18px">
+      <div class="rpt-sbox">
+        <div class="rpt-sbox-label">Gross Profit</div>
+        <div class="rpt-sbox-val">${fmtR(grossProfit)}</div>
+        <div class="rpt-sbox-sub">Revenue less cost of goods sold</div>
+      </div>
+      <div class="rpt-sbox">
+        <div class="rpt-sbox-label">Gross Margin</div>
+        <div class="rpt-sbox-val">${grossMargin.toFixed(1)}%</div>
+        <div class="rpt-sbox-sub">Gross Profit ÷ Revenue</div>
+      </div>
+      <div class="rpt-sbox ${netInc >= 0 ? 'green' : 'red'}">
+        <div class="rpt-sbox-label">Net Income %</div>
+        <div class="rpt-sbox-val" style="color:${netInc >= 0 ? 'var(--green-light)' : 'var(--red-light)'}">${netMargin.toFixed(1)}%</div>
+        <div class="rpt-sbox-sub">Net Income ÷ Revenue</div>
+      </div>
+    </div>
     <div class="rpt-page-footer">
       <span>${clientCompanyName || 'Clear Books Advisory'} · Prepared by Clear Books Advisory</span>
       <span>${periodLabel}</span>
