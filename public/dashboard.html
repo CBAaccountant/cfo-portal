@@ -1726,28 +1726,6 @@ function buildReport(plData, bsData, arData, apData, start, end) {
   let   gpMo   = findPLSummaryVals(plRows, 'gross profit');
   if (!gpMo) gpMo = revMo.map((r, i) => r - ((cogsMo && cogsMo[i]) || 0));
   const netMo  = rowVals(netRow?.Summary);
-  // Profit margin for EACH month (the level that month, not the change).
-  const gmMo = revMo.map((r, i) => r ? (gpMo[i] / r * 100) : null);
-  const nmMo = revMo.map((r, i) => r ? (netMo[i] / r * 100) : null);
-  const marginCell = v => {
-    if (v === null || !isFinite(v)) return `<td style="text-align:right">—</td>`;
-    return `<td style="text-align:right;font-weight:600${v < 0 ? ';color:var(--red-light)' : ''}">${v.toFixed(1)}%</td>`;
-  };
-  const marginRows = [
-    { label: 'Gross Margin %', vals: gmMo, total: grossMargin },
-    { label: 'Net Income %',   vals: nmMo, total: netMargin },
-  ];
-  const momTable = plMonths.length ? `
-    <div style="margin-top:20px">
-      <div style="font-size:9.5pt;font-weight:600;color:var(--text-secondary);margin-bottom:8px">Profit Margin by Month</div>
-      <table class="rpt-table">
-        <thead><tr><th style="width:160px;text-align:left">Margin</th>${plMonths.map(m => `<th>${m}</th>`).join('')}<th>YTD</th></tr></thead>
-        <tbody>
-          ${marginRows.map(r => `<tr class="rd"><td>${r.label}</td>${r.vals.map(marginCell).join('')}${marginCell(r.total)}</tr>`).join('')}
-        </tbody>
-      </table>
-    </div>` : '';
-
   // Month vs Year-to-Date figures for the executive summary. "Month" = the latest month in
   // the range; "YTD" = the full period total.
   const lastIdx   = revMo.length - 1;
@@ -1757,6 +1735,39 @@ function buildReport(plData, bsData, arData, apData, start, end) {
   const monthNI   = lastIdx >= 0 ? (netMo[lastIdx] || 0) : 0;
   const monthGM   = monthRev ? monthGP / monthRev * 100 : 0;
   const monthNM   = monthRev ? monthNI / monthRev * 100 : 0;
+
+  // Performance summary. Only split Month vs YTD when the range spans more than one month;
+  // for a single-month run YTD equals the month, so show just one column.
+  const singleMonth = plMonths.length <= 1;
+  const perfRows = [
+    ['Revenue',        fmtR(monthRev), fmtR(totalRev)],
+    ['Gross Profit',   fmtR(monthGP),  fmtR(grossProfit)],
+    ['Gross Margin %', monthGM.toFixed(1) + '%', grossMargin.toFixed(1) + '%'],
+    ['Net Income',     fmtR(monthNI),  fmtR(netInc)],
+    ['Net Income %',   monthNM.toFixed(1) + '%', netMargin.toFixed(1) + '%'],
+  ];
+  const perfTable = `
+        <div style="margin-top:24px">
+          <div style="font-size:7.5pt;text-transform:uppercase;letter-spacing:.12em;color:var(--text-muted);margin-bottom:10px">Performance Summary${singleMonth ? '' : ' (Month vs Year to Date)'}</div>
+          <table style="width:100%;border-collapse:collapse;font-size:9.5pt">
+            <thead>
+              <tr style="color:var(--text-muted);font-size:7.5pt;text-transform:uppercase;letter-spacing:.08em">
+                <th style="text-align:left;padding:6px 8px">Metric</th>
+                ${singleMonth
+                  ? `<th style="text-align:right;padding:6px 8px">${monthLabel2}</th>`
+                  : `<th style="text-align:right;padding:6px 8px">${monthLabel2} (Month)</th><th style="text-align:right;padding:6px 8px">Year to Date</th>`}
+              </tr>
+            </thead>
+            <tbody>
+              ${perfRows.map(r => `<tr style="border-top:1px solid #e8ebf0">
+                <td style="text-align:left;padding:6px 8px;color:var(--text-secondary)">${r[0]}</td>
+                ${singleMonth
+                  ? `<td style="text-align:right;padding:6px 8px;font-weight:600">${r[2]}</td>`
+                  : `<td style="text-align:right;padding:6px 8px;font-weight:600">${r[1]}</td><td style="text-align:right;padding:6px 8px;font-weight:600">${r[2]}</td>`}
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>`;
 
   const bsRows = bsData.Rows?.Row || [];
   function findBSTotal(label, rws) {
@@ -1831,31 +1842,7 @@ function buildReport(plData, bsData, arData, apData, start, end) {
             <div class="rpt-sbox-sub">${asOfLabel}</div>
           </div>
         </div>
-        <div style="margin-top:24px">
-          <div style="font-size:7.5pt;text-transform:uppercase;letter-spacing:.12em;color:var(--text-muted);margin-bottom:10px">Performance Summary (Month vs Year to Date)</div>
-          <table style="width:100%;border-collapse:collapse;font-size:9.5pt">
-            <thead>
-              <tr style="color:var(--text-muted);font-size:7.5pt;text-transform:uppercase;letter-spacing:.08em">
-                <th style="text-align:left;padding:6px 8px">Metric</th>
-                <th style="text-align:right;padding:6px 8px">${monthLabel2} (Month)</th>
-                <th style="text-align:right;padding:6px 8px">Year to Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${[
-                ['Revenue',        fmtR(monthRev), fmtR(totalRev)],
-                ['Gross Profit',   fmtR(monthGP),  fmtR(grossProfit)],
-                ['Gross Margin %', monthGM.toFixed(1) + '%', grossMargin.toFixed(1) + '%'],
-                ['Net Income',     fmtR(monthNI),  fmtR(netInc)],
-                ['Net Income %',   monthNM.toFixed(1) + '%', netMargin.toFixed(1) + '%'],
-              ].map(r => `<tr style="border-top:1px solid #e8ebf0">
-                <td style="text-align:left;padding:6px 8px;color:var(--text-secondary)">${r[0]}</td>
-                <td style="text-align:right;padding:6px 8px;font-weight:600">${r[1]}</td>
-                <td style="text-align:right;padding:6px 8px;font-weight:600">${r[2]}</td>
-              </tr>`).join('')}
-            </tbody>
-          </table>
-        </div>
+        ${perfTable}
       </div>
       <div style="margin-top:32px;padding:14px 18px;background:#f9fafb;border-radius:6px;border-left:3px solid var(--blue)">
         <div style="font-size:7.5pt;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-bottom:6px">Contents</div>
@@ -1887,6 +1874,19 @@ function buildReport(plData, bsData, arData, apData, start, end) {
         <th>Total</th>
       </tr></thead>
       <tbody>`;
+    // Render a "% of revenue" margin row (per month + total) under a P&L summary line.
+    function marginPctRow(label, mvs, total) {
+      let h = `<tr style="color:var(--blue);font-size:8pt"><td style="font-style:italic;border:none">${label}</td>`;
+      mvs.forEach((v, i) => {
+        const n = parseFloat(v?.value || 0) || 0;
+        const rev = revMo[i] || 0;
+        const p = rev ? (n / rev * 100) : null;
+        h += `<td style="border:none;text-align:right">${p === null ? '—' : p.toFixed(1) + '%'}</td>`;
+      });
+      const tp = totalRev ? (total / totalRev * 100) : null;
+      h += `<td style="border:none;text-align:right">${tp === null ? '—' : tp.toFixed(1) + '%'}</td></tr>`;
+      return h;
+    }
     function renderSec(sec) {
       if (!sec) return;
       const sRows = sec.Rows?.Row || [];
@@ -1914,25 +1914,16 @@ function buildReport(plData, bsData, arData, apData, start, end) {
         const mVals = vals.slice(1, -1);
         const tot = parseFloat(vals[vals.length - 1]?.value || 0) || 0;
         const isNet = name.toLowerCase().includes('net income');
+        const isGross = name.toLowerCase().includes('gross profit');
         html += `<tr class="${isNet ? 'rc' : 'rs'}"><td>${name}</td>`;
         mVals.forEach(v => {
           const n = parseFloat(v?.value || 0) || 0;
           html += `<td class="${n < 0 ? 'rpt-nv' : ''}">${fmtRneg(n)}</td>`;
         });
         html += `<td class="${tot < 0 ? 'rpt-nv' : ''}">${fmtRneg(tot)}</td></tr>`;
-        if (isNet) {
-          // Net Income % of revenue, per month + total, just below the Net Income line.
-          html += `<tr style="color:var(--blue);font-size:8pt"><td style="font-style:italic;border:none">Net Income %</td>`;
-          mVals.forEach((v, i) => {
-            const n = parseFloat(v?.value || 0) || 0;
-            const rev = revMo[i] || 0;
-            const p = rev ? (n / rev * 100) : null;
-            html += `<td style="border:none;text-align:right">${p === null ? '—' : p.toFixed(1) + '%'}</td>`;
-          });
-          const tp = totalRev ? (tot / totalRev * 100) : null;
-          html += `<td style="border:none;text-align:right">${tp === null ? '—' : tp.toFixed(1) + '%'}</td></tr>`;
-          html += `<tr class="rsp"><td></td></tr>`;
-        }
+        // Profit margin %, right under the line it belongs to.
+        if (isGross) html += marginPctRow('Gross Margin %', mVals, tot);
+        if (isNet) { html += marginPctRow('Net Income %', mVals, tot); html += `<tr class="rsp"><td></td></tr>`; }
       }
     }
     rows.forEach(r => renderSec(r));
@@ -1967,7 +1958,6 @@ function buildReport(plData, bsData, arData, apData, start, end) {
         <div class="rpt-sbox-sub">Net Income ÷ Revenue</div>
       </div>
     </div>
-    ${momTable}
     <div class="rpt-page-footer">
       <span>${clientCompanyName || 'Clear Books Advisory'} · Prepared by Clear Books Advisory</span>
       <span>${periodLabel}</span>
