@@ -338,8 +338,9 @@ footer span{color:var(--text-secondary);font-weight:500}
 .aging-nv { color: var(--red-light) !important; }
 
 /* @print */
-@page portrait-page { size: letter portrait; margin: 0.5in; }
-@page landscape-page { size: letter landscape; margin: 0.5in; }
+/* Force the whole printed report to landscape. Chrome ignores named @page rules applied via
+   the page: property, so use one global @page (which it honors). Every report page is landscape. */
+@page { size: letter landscape; margin: 0.5in; }
 @media print {
   body { background: #fff !important; }
   #connectScreen, header, .sidebar, footer, #lo { display: none !important; }
@@ -347,15 +348,15 @@ footer span{color:var(--text-secondary);font-weight:500}
   #tab-pl, #tab-bs { display: none !important; }
   #tab-report { display: flex !important; }
   .rpt-toolbar { display: none !important; }
+  .rpt-pages, #rptPages { width: 100%; display: block; }
   .rpt-page, .rpt-page-landscape {
     width: 100%; margin: 0; border: none; box-shadow: none;
     padding: 40px 48px; min-height: auto; page-break-after: always;
   }
-  .rpt-page-landscape {
-    width: 100%;
-  }
-  .rpt-page { page: portrait-page; }
-  .rpt-page-landscape { page: landscape-page; }
+  /* no trailing blank page after the last section */
+  .rpt-page-landscape:last-child { page-break-after: avoid; }
+  /* keep table rows and summary boxes from splitting across sheets */
+  .rpt-table tr, .rpt-summary-grid, .rpt-sbox { break-inside: avoid; }
 }
 
 /* ── BANK REC ─────────────────────────────────────────────── */
