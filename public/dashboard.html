@@ -1144,6 +1144,22 @@ function findPLSummary(rows, label){
   }
   return null;
 }
+// Same, but return the monthly values array of the matched summary row.
+function findPLSummaryVals(rows, label){
+  for(const r of rows||[]){
+    if(r.type==='Section'){
+      const s=r.Summary?.ColData?.[0]?.value?.toLowerCase();
+      if(s&&s.includes(label.toLowerCase())) return rowVals(r.Summary);
+      const sub=findPLSummaryVals(r.Rows?.Row||[], label);
+      if(sub!==null) return sub;
+    }
+  }
+  return null;
+}
+// Month-over-month % change for an array (null where there is no prior month or prior is 0).
+function momPct(arr){
+  return arr.map((v,i)=> (i>0 && arr[i-1]!==0) ? ((v-arr[i-1])/Math.abs(arr[i-1])*100) : null);
+}
 // Gross profit + gross margin % from a QBO P&L report. Prefer the explicit Gross Profit
 // row; if QBO doesn't return one, fall back to Revenue minus Cost of Goods Sold.
 function grossFrom(rows, totalRev){
@@ -1702,6 +1718,35 @@ function buildReport(plData, bsData, arData, apData, start, end) {
   const { grossProfit, grossMargin } = grossFrom(plRows, totalRev);
   const netMargin = totalRev?netInc/totalRev*100:0;
 
+  // Month-over-month trend for the key P&L lines (uses the monthly columns).
+  const plCols   = plData.Columns?.Column || [];
+  const plMonths = plCols.slice(1, -1).map(c => c.ColTitle || '');
+  const revMo  = rowVals(incSec?.Summary);
+  const cogsMo = findPLSummaryVals(plRows, 'cost of goods sold');
+  let   gpMo   = findPLSummaryVals(plRows, 'gross profit');
+  if (!gpMo) gpMo = revMo.map((r, i) => r - ((cogsMo && cogsMo[i]) || 0));
+  const netMo  = rowVals(netRow?.Summary);
+  const momCell = v => {
+    if (v === null || !isFinite(v)) return `<td style="color:#9aa0aa">—</td>`;
+    const c = v >= 0 ? 'var(--green-light)' : 'var(--red-light)';
+    return `<td style="color:${c};font-weight:600">${v >= 0 ? '+' : ''}${v.toFixed(1)}%</td>`;
+  };
+  const momTrendRows = [
+    { label: 'Revenue',      mom: momPct(revMo) },
+    { label: 'Gross Profit', mom: momPct(gpMo) },
+    { label: 'Net Income',   mom: momPct(netMo) },
+  ];
+  const momTable = plMonths.length > 1 ? `
+    <div style="margin-top:20px">
+      <div style="font-size:9.5pt;font-weight:600;color:var(--text-secondary);margin-bottom:8px">Month-over-Month Trend <span style="font-weight:400;color:var(--text-muted)">(% change vs the prior month)</span></div>
+      <table class="rpt-table">
+        <thead><tr><th style="width:160px;text-align:left">Metric</th>${plMonths.map(m => `<th>${m}</th>`).join('')}</tr></thead>
+        <tbody>
+          ${momTrendRows.map(r => `<tr class="rd"><td>${r.label}</td>${r.mom.map(momCell).join('')}</tr>`).join('')}
+        </tbody>
+      </table>
+    </div>` : '';
+
   const bsRows = bsData.Rows?.Row || [];
   function findBSTotal(label, rws) {
     rws = rws || bsRows;
@@ -1874,6 +1919,7 @@ function buildReport(plData, bsData, arData, apData, start, end) {
         <div class="rpt-sbox-sub">Net Income ÷ Revenue</div>
       </div>
     </div>
+    ${momTable}
     <div class="rpt-page-footer">
       <span>${clientCompanyName || 'Clear Books Advisory'} · Prepared by Clear Books Advisory</span>
       <span>${periodLabel}</span>
