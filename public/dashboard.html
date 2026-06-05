@@ -339,8 +339,10 @@ footer span{color:var(--text-secondary);font-weight:500}
 
 /* @print */
 /* Force the whole printed report to landscape. Chrome ignores named @page rules applied via
-   the page: property, so use one global @page (which it honors). Every report page is landscape. */
-@page { size: letter landscape; margin: 0.5in; }
+   the page: property, so use one global @page (which it honors). Every report page is landscape.
+   margin: 0 removes the browser's own URL/date/page-number header+footer (it only prints those
+   in the page margin); the white space is provided by the report page padding instead. */
+@page { size: letter landscape; margin: 0; }
 @media print {
   body { background: #fff !important; }
   #connectScreen, header, .sidebar, footer, #lo { display: none !important; }
@@ -351,7 +353,7 @@ footer span{color:var(--text-secondary);font-weight:500}
   .rpt-pages, #rptPages { width: 100%; display: block; }
   .rpt-page, .rpt-page-landscape {
     width: 100%; margin: 0; border: none; box-shadow: none;
-    padding: 40px 48px; min-height: auto; page-break-after: always;
+    padding: 0.5in 0.6in; min-height: auto; page-break-after: always;
   }
   /* no trailing blank page after the last section */
   .rpt-page-landscape:last-child { page-break-after: avoid; }
