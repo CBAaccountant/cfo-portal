@@ -1747,6 +1747,16 @@ function buildReport(plData, bsData, arData, apData, start, end) {
       </table>
     </div>` : '';
 
+  // Month vs Year-to-Date figures for the executive summary. "Month" = the latest month in
+  // the range; "YTD" = the full period total.
+  const lastIdx   = revMo.length - 1;
+  const monthLabel2 = plMonths[lastIdx] || 'Month';
+  const monthRev  = lastIdx >= 0 ? (revMo[lastIdx] || 0) : 0;
+  const monthGP   = lastIdx >= 0 ? (gpMo[lastIdx] || 0)  : 0;
+  const monthNI   = lastIdx >= 0 ? (netMo[lastIdx] || 0) : 0;
+  const monthGM   = monthRev ? monthGP / monthRev * 100 : 0;
+  const monthNM   = monthRev ? monthNI / monthRev * 100 : 0;
+
   const bsRows = bsData.Rows?.Row || [];
   function findBSTotal(label, rws) {
     rws = rws || bsRows;
@@ -1820,6 +1830,31 @@ function buildReport(plData, bsData, arData, apData, start, end) {
             <div class="rpt-sbox-sub">${asOfLabel}</div>
           </div>
         </div>
+        <div style="margin-top:24px">
+          <div style="font-size:7.5pt;text-transform:uppercase;letter-spacing:.12em;color:var(--text-muted);margin-bottom:10px">Performance Summary (Month vs Year to Date)</div>
+          <table style="width:100%;border-collapse:collapse;font-size:9.5pt">
+            <thead>
+              <tr style="color:var(--text-muted);font-size:7.5pt;text-transform:uppercase;letter-spacing:.08em">
+                <th style="text-align:left;padding:6px 8px">Metric</th>
+                <th style="text-align:right;padding:6px 8px">${monthLabel2} (Month)</th>
+                <th style="text-align:right;padding:6px 8px">Year to Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${[
+                ['Revenue',        fmtR(monthRev), fmtR(totalRev)],
+                ['Gross Profit',   fmtR(monthGP),  fmtR(grossProfit)],
+                ['Gross Margin %', monthGM.toFixed(1) + '%', grossMargin.toFixed(1) + '%'],
+                ['Net Income',     fmtR(monthNI),  fmtR(netInc)],
+                ['Net Income %',   monthNM.toFixed(1) + '%', netMargin.toFixed(1) + '%'],
+              ].map(r => `<tr style="border-top:1px solid #e8ebf0">
+                <td style="text-align:left;padding:6px 8px;color:var(--text-secondary)">${r[0]}</td>
+                <td style="text-align:right;padding:6px 8px;font-weight:600">${r[1]}</td>
+                <td style="text-align:right;padding:6px 8px;font-weight:600">${r[2]}</td>
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
       </div>
       <div style="margin-top:32px;padding:14px 18px;background:#f9fafb;border-radius:6px;border-left:3px solid var(--blue)">
         <div style="font-size:7.5pt;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-bottom:6px">Contents</div>
@@ -1884,7 +1919,19 @@ function buildReport(plData, bsData, arData, apData, start, end) {
           html += `<td class="${n < 0 ? 'rpt-nv' : ''}">${fmtRneg(n)}</td>`;
         });
         html += `<td class="${tot < 0 ? 'rpt-nv' : ''}">${fmtRneg(tot)}</td></tr>`;
-        if (isNet) html += `<tr class="rsp"><td></td></tr>`;
+        if (isNet) {
+          // Net Income % of revenue, per month + total, just below the Net Income line.
+          html += `<tr style="color:var(--blue);font-size:8pt"><td style="font-style:italic;border:none">Net Income %</td>`;
+          mVals.forEach((v, i) => {
+            const n = parseFloat(v?.value || 0) || 0;
+            const rev = revMo[i] || 0;
+            const p = rev ? (n / rev * 100) : null;
+            html += `<td style="border:none;text-align:right">${p === null ? '—' : p.toFixed(1) + '%'}</td>`;
+          });
+          const tp = totalRev ? (tot / totalRev * 100) : null;
+          html += `<td style="border:none;text-align:right">${tp === null ? '—' : tp.toFixed(1) + '%'}</td></tr>`;
+          html += `<tr class="rsp"><td></td></tr>`;
+        }
       }
     }
     rows.forEach(r => renderSec(r));
