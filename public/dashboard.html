@@ -1726,23 +1726,24 @@ function buildReport(plData, bsData, arData, apData, start, end) {
   let   gpMo   = findPLSummaryVals(plRows, 'gross profit');
   if (!gpMo) gpMo = revMo.map((r, i) => r - ((cogsMo && cogsMo[i]) || 0));
   const netMo  = rowVals(netRow?.Summary);
-  const momCell = v => {
-    if (v === null || !isFinite(v)) return `<td style="color:#9aa0aa">—</td>`;
-    const c = v >= 0 ? 'var(--green-light)' : 'var(--red-light)';
-    return `<td style="color:${c};font-weight:600">${v >= 0 ? '+' : ''}${v.toFixed(1)}%</td>`;
+  // Profit margin for EACH month (the level that month, not the change).
+  const gmMo = revMo.map((r, i) => r ? (gpMo[i] / r * 100) : null);
+  const nmMo = revMo.map((r, i) => r ? (netMo[i] / r * 100) : null);
+  const marginCell = v => {
+    if (v === null || !isFinite(v)) return `<td style="text-align:right">—</td>`;
+    return `<td style="text-align:right;font-weight:600${v < 0 ? ';color:var(--red-light)' : ''}">${v.toFixed(1)}%</td>`;
   };
-  const momTrendRows = [
-    { label: 'Revenue',      mom: momPct(revMo) },
-    { label: 'Gross Profit', mom: momPct(gpMo) },
-    { label: 'Net Income',   mom: momPct(netMo) },
+  const marginRows = [
+    { label: 'Gross Margin %', vals: gmMo, total: grossMargin },
+    { label: 'Net Income %',   vals: nmMo, total: netMargin },
   ];
-  const momTable = plMonths.length > 1 ? `
+  const momTable = plMonths.length ? `
     <div style="margin-top:20px">
-      <div style="font-size:9.5pt;font-weight:600;color:var(--text-secondary);margin-bottom:8px">Month-over-Month Trend <span style="font-weight:400;color:var(--text-muted)">(% change vs the prior month)</span></div>
+      <div style="font-size:9.5pt;font-weight:600;color:var(--text-secondary);margin-bottom:8px">Profit Margin by Month</div>
       <table class="rpt-table">
-        <thead><tr><th style="width:160px;text-align:left">Metric</th>${plMonths.map(m => `<th>${m}</th>`).join('')}</tr></thead>
+        <thead><tr><th style="width:160px;text-align:left">Margin</th>${plMonths.map(m => `<th>${m}</th>`).join('')}<th>YTD</th></tr></thead>
         <tbody>
-          ${momTrendRows.map(r => `<tr class="rd"><td>${r.label}</td>${r.mom.map(momCell).join('')}</tr>`).join('')}
+          ${marginRows.map(r => `<tr class="rd"><td>${r.label}</td>${r.vals.map(marginCell).join('')}${marginCell(r.total)}</tr>`).join('')}
         </tbody>
       </table>
     </div>` : '';
