@@ -1209,22 +1209,20 @@ async function checkStatus(){
       const banner = document.getElementById('impersonationBanner');
       const nameEl = document.getElementById('impersonationName');
       if(banner){ banner.classList.add('show'); }
-      if(nameEl){ nameEl.textContent = me.viewingAs.companyName || me.viewingAs.email; }
+      if(nameEl){ nameEl.textContent = 'Demo'; }
     }
 
-    // Company name: use viewingAs name if impersonating, else own
+    // Demo: never show the real account/company name.
     const targetInfo = me.impersonating ? me.viewingAs : me;
-    if(targetInfo.companyName){
-      clientCompanyName = targetInfo.companyName;
-      applyCompanyName();
-    }
+    clientCompanyName = 'Demo';
+    applyCompanyName();
 
     const qboConnected = me.impersonating ? me.viewingAs.qboConnected : me.qboConnected;
 
     if(qboConnected){
       document.getElementById('connectScreen').style.display='none';
       document.getElementById('dashboard').style.display='flex';
-      document.getElementById('realmLabel').textContent = `Connected · ${targetInfo.companyName || me.email}`;
+      document.getElementById('realmLabel').textContent = 'Connected';
       fetchCompanyName(); // also pull live QBO company name
       loadAll();
     } else {
