@@ -1719,9 +1719,12 @@ function buildReport(plData, bsData, arData, apData, start, end) {
   const expSec = plRows.find(r => r.type === 'Section' && r.Header?.ColData?.[0]?.value?.toLowerCase().includes('expense'));
   const totalRev = rowVal(incSec?.Summary);
   const netInc   = rowVal(netRow?.Summary);
-  // Cover shows operating expenses only (labeled as such); COGS is reflected in
-  // Gross Profit on the performance summary below.
+  // Total Expenses = operating + COGS + other expenses, with the split shown
+  // in the box sub-line so the cover stays reconcilable to the P&L.
   const opExp    = rowVal(expSec?.Summary);
+  const cogsExp  = findPLSummary(plRows, 'total cost of goods sold') || 0;
+  const othExp   = findPLSummary(plRows, 'total other expenses') || 0;
+  const totalExp = opExp + cogsExp + othExp;
   const { grossProfit, grossMargin } = grossFrom(plRows, totalRev);
   const netMargin = totalRev?netInc/totalRev*100:0;
 
@@ -1836,9 +1839,9 @@ function buildReport(plData, bsData, arData, apData, start, end) {
         </div>
         <div class="rpt-summary-grid">
           <div class="rpt-sbox red">
-            <div class="rpt-sbox-label">Operating Expenses</div>
-            <div class="rpt-sbox-val">${fmtR(opExp)}</div>
-            <div class="rpt-sbox-sub">${periodLabel}</div>
+            <div class="rpt-sbox-label">Total Expenses</div>
+            <div class="rpt-sbox-val">${fmtR(totalExp)}</div>
+            <div class="rpt-sbox-sub">Operating ${fmtR(opExp)} · COGS ${fmtR(cogsExp)}${othExp ? ' · Other ' + fmtR(othExp) : ''}</div>
           </div>
           <div class="rpt-sbox">
             <div class="rpt-sbox-label">Total Liabilities</div>
