@@ -1717,9 +1717,9 @@ function buildReport(plData, bsData, arData, apData, start, end) {
   const expSec = plRows.find(r => r.type === 'Section' && r.Header?.ColData?.[0]?.value?.toLowerCase().includes('expense'));
   const totalRev = rowVal(incSec?.Summary);
   const netInc   = rowVal(netRow?.Summary);
-  // Cover-page expenses must tie: Revenue minus Expenses = Net Income, so include
-  // COGS and other expenses (net of other income), not just the Expenses section.
-  const totalExp = netRow ? (totalRev - netInc) : rowVal(expSec?.Summary);
+  // Cover shows operating expenses only (labeled as such); COGS is reflected in
+  // Gross Profit on the performance summary below.
+  const opExp    = rowVal(expSec?.Summary);
   const { grossProfit, grossMargin } = grossFrom(plRows, totalRev);
   const netMargin = totalRev?netInc/totalRev*100:0;
 
@@ -1834,8 +1834,8 @@ function buildReport(plData, bsData, arData, apData, start, end) {
         </div>
         <div class="rpt-summary-grid">
           <div class="rpt-sbox red">
-            <div class="rpt-sbox-label">Total Expenses</div>
-            <div class="rpt-sbox-val">${fmtR(totalExp)}</div>
+            <div class="rpt-sbox-label">Operating Expenses</div>
+            <div class="rpt-sbox-val">${fmtR(opExp)}</div>
             <div class="rpt-sbox-sub">${periodLabel}</div>
           </div>
           <div class="rpt-sbox">
