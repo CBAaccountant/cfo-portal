@@ -1482,8 +1482,10 @@ function renderBS(data, asOf){
     rws=rws||rows;
     for(const r of rws){
       if(r.type==='Section'){
-        const s=r.Summary?.ColData?.[0]?.value?.toLowerCase();
-        if(s?.includes(label.toLowerCase()))return rowVal(r.Summary);
+        // Exact match only: QBO's grand total "TOTAL LIABILITIES AND EQUITY" contains
+        // "total liabilities" as a substring and sits above the real Liabilities section.
+        const s=r.Summary?.ColData?.[0]?.value?.toLowerCase().trim();
+        if(s===label.toLowerCase())return rowVal(r.Summary);
         const sub=findTotal(label,r.Rows?.Row||[]);
         if(sub!==null)return sub;
       }
@@ -1775,8 +1777,10 @@ function buildReport(plData, bsData, arData, apData, start, end) {
     rws = rws || bsRows;
     for (const r of rws) {
       if (r.type === 'Section') {
-        const s = r.Summary?.ColData?.[0]?.value?.toLowerCase();
-        if (s?.includes(label.toLowerCase())) return rowVal(r.Summary);
+        // Exact match only: QBO's grand total "TOTAL LIABILITIES AND EQUITY" contains
+        // "total liabilities" as a substring and sits above the real Liabilities section.
+        const s = r.Summary?.ColData?.[0]?.value?.toLowerCase().trim();
+        if (s === label.toLowerCase()) return rowVal(r.Summary);
         const sub = findBSTotal(label, r.Rows?.Row || []);
         if (sub !== null) return sub;
       }
