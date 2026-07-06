@@ -1718,8 +1718,10 @@ function buildReport(plData, bsData, arData, apData, start, end) {
   const incSec = plRows.find(r => r.type === 'Section' && r.Header?.ColData?.[0]?.value?.toLowerCase().includes('income'));
   const expSec = plRows.find(r => r.type === 'Section' && r.Header?.ColData?.[0]?.value?.toLowerCase().includes('expense'));
   const totalRev = rowVal(incSec?.Summary);
-  const totalExp = rowVal(expSec?.Summary);
   const netInc   = rowVal(netRow?.Summary);
+  // Cover-page expenses must tie: Revenue minus Expenses = Net Income, so include
+  // COGS and other expenses (net of other income), not just the Expenses section.
+  const totalExp = netRow ? (totalRev - netInc) : rowVal(expSec?.Summary);
   const { grossProfit, grossMargin } = grossFrom(plRows, totalRev);
   const netMargin = totalRev?netInc/totalRev*100:0;
 
@@ -2051,8 +2053,8 @@ function buildReport(plData, bsData, arData, apData, start, end) {
         const vals = r.ColData || [];
         const name = vals[0]?.value || '';
         const numCols = vals.slice(1);
-        // Highlight rows with overdue amounts (cols 2+ are aging buckets)
-        const hasOverdue = numCols.slice(1).some(v => parseFloat(v?.value||0) > 0);
+        // Highlight rows with overdue amounts (aging buckets only, not Current or the Total col)
+        const hasOverdue = numCols.slice(1, -1).some(v => parseFloat(v?.value||0) > 0);
         rowsHtml += `<tr class="${hasOverdue ? 'aging-overdue' : ''}">`;
         rowsHtml += `<td>${name}</td>`;
         numCols.forEach(v => {
@@ -2071,7 +2073,7 @@ function buildReport(plData, bsData, arData, apData, start, end) {
             const vals = sub.ColData || [];
             const name = vals[0]?.value || '';
             const numCols = vals.slice(1);
-            const hasOverdue = numCols.slice(1).some(v => parseFloat(v?.value||0) > 0);
+            const hasOverdue = numCols.slice(1, -1).some(v => parseFloat(v?.value||0) > 0);
             rowsHtml += `<tr class="${hasOverdue ? 'aging-overdue' : ''}">`;
             rowsHtml += `<td style="padding-left:20px">${name}</td>`;
             numCols.forEach(v => {
