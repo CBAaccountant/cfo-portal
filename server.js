@@ -5,6 +5,8 @@ const pgSession    = require('connect-pg-simple')(session);
 const axios        = require('axios');
 const bcrypt       = require('bcrypt');
 const path         = require('path');
+const crypto       = require('crypto');
+const rateLimit    = require('express-rate-limit');
 const db           = require('./db');
 const { requireAuth, requireAdmin, getTargetUserId } = require('./middleware');
 
@@ -14,6 +16,13 @@ const PORT = process.env.PORT || 3000;
 // Trust Railway's proxy so secure cookies work over HTTPS
 app.set('trust proxy', 1);
 
+// ── Required secrets — never fall back to a guessable default in production ───
+const SESSION_SECRET = process.env.SESSION_SECRET;
+if (!SESSION_SECRET && process.env.NODE_ENV === 'production') {
+  console.error('FATAL: SESSION_SECRET is not set. Set it in Railway environment variables.');
+  process.exit(1);
+}
+
 // ── Session (PostgreSQL-backed) ───────────────────────────────────────────────
 app.use(session({
   store: new pgSession({
@@ -21,7 +30,7 @@ app.use(session({
     tableName: 'session',
     createTableIfMissing: false
   }),
-  secret:            process.env.SESSION_SECRET || 'cfo-portal-secret',
+  secret:            SESSION_SECRET || crypto.randomBytes(32).toString('hex'),
   resave:            false,
   saveUninitialized: false,
   cookie: {
@@ -63,8 +72,17 @@ const SCOPES = 'com.intuit.quickbooks.accounting';
 
 // ── Auth Routes ───────────────────────────────────────────────────────────────
 
+// Throttle login attempts to slow password-guessing bots
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many login attempts. Please try again in 15 minutes.' }
+});
+
 // Login
-app.post('/api/auth/login', async (req, res) => {
+app.post('/api/auth/login', loginLimiter, async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
 
@@ -76,17 +94,22 @@ app.post('/api/auth/login', async (req, res) => {
     const match = await bcrypt.compare(password, user.password_hash);
     if (!match) return res.status(401).json({ error: 'Invalid email or password' });
 
-    // Store user info in session
-    req.session.userId      = user.id;
-    req.session.userRole    = user.role;
-    req.session.userIsActive = user.is_active;
+    // Issue a fresh session ID on login (prevents session fixation)
+    req.session.regenerate(async (err) => {
+      if (err) {
+        console.error('Session regenerate error:', err.message);
+        return res.status(500).json({ error: 'Server error during login' });
+      }
+      req.session.userId   = user.id;
+      req.session.userRole = user.role;
 
-    await db.updateUserLastLogin(user.id);
+      try { await db.updateUserLastLogin(user.id); } catch (e) { console.error('Last-login update error:', e.message); }
 
-    res.json({
-      success: true,
-      role: user.role,
-      redirect: user.role === 'admin' ? '/admin.html' : '/dashboard.html'
+      res.json({
+        success: true,
+        role: user.role,
+        redirect: user.role === 'admin' ? '/admin.html' : '/dashboard.html'
+      });
     });
   } catch (err) {
     console.error('Login error:', err.message);
@@ -181,7 +204,7 @@ app.get('/callback', async (req, res) => {
     res.redirect('/dashboard.html');
   } catch (err) {
     console.error('OAuth callback error:', err.response?.data || err.message);
-    res.status(500).send('OAuth failed: ' + JSON.stringify(err.response?.data || err.message));
+    res.status(500).send('QuickBooks connection failed — please try again from the dashboard.');
   }
 });
 
@@ -274,7 +297,7 @@ app.get('/api/company-info', requireAuth, async (req, res) => {
     });
   } catch (err) {
     console.error('Company info error:', err.response?.data || err.message);
-    res.status(500).json({ error: err.response?.data || err.message });
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
@@ -291,7 +314,7 @@ app.get('/api/pnl', requireAuth, async (req, res) => {
     res.json(data);
   } catch (err) {
     console.error('P&L error:', err.response?.data || err.message);
-    res.status(500).json({ error: err.response?.data || err.message });
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
@@ -308,7 +331,7 @@ app.get('/api/balance-sheet', requireAuth, async (req, res) => {
     res.json(data);
   } catch (err) {
     console.error('Balance Sheet error:', err.response?.data || err.message);
-    res.status(500).json({ error: err.response?.data || err.message });
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
@@ -324,7 +347,7 @@ app.get('/api/ar-aging', requireAuth, async (req, res) => {
     res.json(data);
   } catch (err) {
     console.error('AR Aging error:', err.response?.data || err.message);
-    res.status(500).json({ error: err.response?.data || err.message });
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
@@ -340,7 +363,7 @@ app.get('/api/ap-aging', requireAuth, async (req, res) => {
     res.json(data);
   } catch (err) {
     console.error('AP Aging error:', err.response?.data || err.message);
-    res.status(500).json({ error: err.response?.data || err.message });
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
@@ -356,7 +379,7 @@ app.get('/api/vendor-spend', requireAuth, async (req, res) => {
     res.json(data);
   } catch (err) {
     console.error('Vendor spend error:', err.response?.data || err.message);
-    res.status(500).json({ error: err.response?.data || err.message });
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
@@ -380,7 +403,7 @@ app.get('/api/bank-accounts', requireAuth, async (req, res) => {
     res.json({ count: accounts.length, accounts });
   } catch (err) {
     console.error('Bank accounts error:', err.response?.data || err.message);
-    res.status(500).json({ error: err.response?.data || err.message });
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
@@ -389,7 +412,7 @@ app.get('/api/bank-accounts', requireAuth, async (req, res) => {
 app.get('/api/bank-rec/transactions', requireAuth, async (req, res) => {
   const { bankAccountId, start, end } = req.query;
   if (!bankAccountId) return res.status(400).json({ error: 'bankAccountId required' });
-  if (!start || !end) return res.status(400).json({ error: 'start + end (YYYY-MM-DD) required' });
+  if (!isIsoDate(start) || !isIsoDate(end)) return res.status(400).json({ error: 'start + end (YYYY-MM-DD) required' });
   try {
     const target = await getConn(req, res); if (!target) return;
     const userId = target.userId;
@@ -436,7 +459,7 @@ app.get('/api/bank-rec/transactions', requireAuth, async (req, res) => {
     res.json({ count: txns.length, transactions: txns });
   } catch (err) {
     console.error('Bank rec transactions error:', err.response?.data || err.message);
-    res.status(500).json({ error: err.response?.data || err.message });
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
@@ -448,7 +471,7 @@ app.get('/api/bank-rec/sessions', requireAuth, async (req, res) => {
     res.json({ count: sessions.length, sessions });
   } catch (err) {
     console.error('Bank rec list error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
@@ -463,7 +486,7 @@ app.get('/api/bank-rec/session/:id', requireAuth, async (req, res) => {
     res.json(session);
   } catch (err) {
     console.error('Bank rec get error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
@@ -487,7 +510,7 @@ app.post('/api/bank-rec/session', requireAuth, async (req, res) => {
     res.json({ success: true, session: result.session });
   } catch (err) {
     console.error('Bank rec save error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
@@ -502,7 +525,7 @@ app.delete('/api/bank-rec/session/:id', requireAuth, async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     console.error('Bank rec delete error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
@@ -518,7 +541,7 @@ app.get('/api/accounts', requireAuth, async (req, res) => {
     res.json(data);
   } catch (err) {
     console.error('Accounts error:', err.response?.data || err.message);
-    res.status(500).json({ error: err.response?.data || err.message });
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
@@ -539,7 +562,7 @@ app.get('/api/vendors', requireAuth, async (req, res) => {
     res.json({ count: vendors.length, vendors });
   } catch (err) {
     console.error('Vendors error:', err.response?.data || err.message);
-    res.status(500).json({ error: err.response?.data || err.message });
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
@@ -591,7 +614,7 @@ app.get('/api/vendor-history', requireAuth, async (req, res) => {
     res.json({ vendorCount: Object.keys(byVendor).length, txnsAnalyzed: purchases.length, byVendor });
   } catch (err) {
     console.error('Vendor history error:', err.response?.data || err.message);
-    res.status(500).json({ error: err.response?.data || err.message });
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
@@ -614,7 +637,7 @@ app.post('/api/vendor', requireAuth, async (req, res) => {
     });
   } catch (err) {
     console.error('Create vendor error:', err.response?.data || err.message);
-    res.status(500).json({ error: err.response?.data || err.message });
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
@@ -641,7 +664,7 @@ app.post('/api/account', requireAuth, async (req, res) => {
     });
   } catch (err) {
     console.error('Create account error:', err.response?.data || err.message);
-    res.status(500).json({ error: err.response?.data || err.message });
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
@@ -713,7 +736,7 @@ app.post('/api/purchase-batch', requireAuth, async (req, res) => {
     res.json(results);
   } catch (err) {
     console.error('Purchase batch error:', err.response?.data || err.message);
-    res.status(500).json({ error: err.response?.data || err.message });
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
@@ -788,7 +811,7 @@ app.post('/api/deposit-batch', requireAuth, async (req, res) => {
     res.json(results);
   } catch (err) {
     console.error('Deposit batch error:', err.response?.data || err.message);
-    res.status(500).json({ error: err.response?.data || err.message });
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
@@ -796,6 +819,8 @@ app.post('/api/deposit-batch', requireAuth, async (req, res) => {
 app.get('/api/reconcile', requireAuth, async (req, res) => {
   const { bankAccountId, start, end } = req.query;
   if (!bankAccountId) return res.status(400).json({ error: 'bankAccountId required' });
+  if (start && !isIsoDate(start)) return res.status(400).json({ error: 'start must be YYYY-MM-DD' });
+  if (end   && !isIsoDate(end))   return res.status(400).json({ error: 'end must be YYYY-MM-DD' });
   const startDate = start || `${new Date().getFullYear()}-01-01`;
   const endDate   = end   || new Date().toISOString().split('T')[0];
   try {
@@ -838,7 +863,7 @@ app.get('/api/reconcile', requireAuth, async (req, res) => {
     });
   } catch (err) {
     console.error('Reconcile error:', err.response?.data || err.message);
-    res.status(500).json({ error: err.response?.data || err.message });
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
@@ -865,7 +890,7 @@ app.get('/api/admin/clients', requireAdmin, async (req, res) => {
     res.json(safe);
   } catch (err) {
     console.error('List clients error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
@@ -873,13 +898,14 @@ app.get('/api/admin/clients', requireAdmin, async (req, res) => {
 app.post('/api/admin/clients', requireAdmin, async (req, res) => {
   const { email, password, companyName } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
+  if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' });
   try {
     const user = await db.createUser(email, password, 'client', companyName || null);
     res.status(201).json({ success: true, user });
   } catch (err) {
     if (err.code === '23505') return res.status(409).json({ error: 'Email already exists' });
     console.error('Create client error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
@@ -892,7 +918,7 @@ app.put('/api/admin/clients/:id', requireAdmin, async (req, res) => {
     res.json({ success: true, user });
   } catch (err) {
     console.error('Update client error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
@@ -905,7 +931,7 @@ app.post('/api/admin/clients/:id/reset-password', requireAdmin, async (req, res)
     res.json({ success: true });
   } catch (err) {
     console.error('Reset password error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
@@ -915,7 +941,7 @@ app.delete('/api/admin/clients/:id/qbo', requireAdmin, async (req, res) => {
     await db.deleteQboConnection(parseInt(req.params.id));
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
@@ -929,7 +955,7 @@ app.post('/api/admin/impersonate/:id', requireAdmin, async (req, res) => {
     req.session.viewingAsUserId = clientId;
     res.json({ success: true, redirect: '/dashboard.html' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
@@ -942,6 +968,7 @@ app.post('/api/admin/stop-impersonation', requireAdmin, (req, res) => {
 // ── Date Helpers ──────────────────────────────────────────────────────────────
 function today() { return new Date().toISOString().split('T')[0]; }
 function firstDayOfYear() { return `${new Date().getFullYear()}-01-01`; }
+function isIsoDate(s) { return typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s); }
 
 // ── Start Server (wait for DB tables to be ready) ────────────────────────────
 db.ready.then(() => {

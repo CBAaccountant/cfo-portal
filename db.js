@@ -120,6 +120,10 @@ module.exports.ready = initDB();
 // ── Encryption (AES-256-GCM) ──────────────────────────────────────────────────
 const ALGO = 'aes-256-gcm';
 const KEY  = Buffer.from(process.env.TOKEN_ENCRYPTION_KEY || '', 'hex');
+if (KEY.length !== 32 && process.env.NODE_ENV === 'production') {
+  console.error('FATAL: TOKEN_ENCRYPTION_KEY must be a 64-character hex string. Set it in Railway environment variables.');
+  process.exit(1);
+}
 
 function encrypt(plaintext) {
   if (!plaintext) return null;
