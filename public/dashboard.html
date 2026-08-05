@@ -1996,6 +1996,7 @@ function buildReport(plData, bsData, arData, apData, start, end) {
         if (r.type === 'Data') {
           const vals = r.ColData || [];
           const n = parseFloat(vals[vals.length - 1]?.value || 0) || 0;
+          if (n === 0) continue; // hide zero-balance accounts on the management report
           html += `<tr class="rd"><td>${vals[0]?.value || ''}</td><td class="${n < 0 ? 'rpt-nv' : ''}">${fmtR(n)}</td></tr>`;
         } else if (r.type === 'Section') renderSec(r);
       }
